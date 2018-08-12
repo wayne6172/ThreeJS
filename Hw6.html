@@ -24,12 +24,12 @@
     <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
     <script>
-        var camera, scene, renderer, mesh, controls, line, stats, clock;
+        var camera, scene, renderer, controls, stats, clock;
         var keyboard = new KeyboardState();
-        var k = 4;
+        var k = 5;
 
         var car;
-        var radius = 60, angle, time = 0;
+        var radius = 150, time = 0;
         var omega = Math.PI * 2 / 30;
 
 
@@ -95,9 +95,6 @@
 
             var nextX = radius * Math.cos(k * omega * time) * Math.cos(omega * time);
             var nextZ = -radius * Math.cos(k * omega * time) * Math.sin(omega * time);
-
-            /*var nextX = radius * Math.cos(omega * time);
-            var nextY = radius * Math.sin(omega * time);*/
 
             var dx = -k * omega * Math.cos(omega * time) * Math.sin(k * omega * time) - omega * Math.sin(omega * time) * Math.cos(k * omega * time);
 
