@@ -74,7 +74,6 @@
                 objLoader.setPath('model/');
                 objLoader.load(modelName + '.obj',function (object) {
                     let theObject = unitize(object,targetSize);
-                    theObject.add(new THREE.BoxHelper(theObject));
                     theObject.name = 'OBJ';
                     scene.add(theObject);
                 },onProgress,onError);
