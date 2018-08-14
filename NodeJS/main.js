@@ -3,8 +3,6 @@ var express = require('express');
 var app = express();
 
 app.get('/api',function(req,res){
-    console.log('url: ' + req.url);
-
     var argv = req.query.argv;
 
     shelljs.exec('main.exe ' + argv, function(status,output){

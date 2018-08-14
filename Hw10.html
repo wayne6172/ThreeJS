@@ -6,7 +6,7 @@
     <style>
         #title {
             position: absolute;
-            top: 0px;
+            top: 0;
             width: 100%;
             padding: 10px;
             text-align: center;
@@ -140,10 +140,11 @@
             controls.update();
             stats.update();
 
-            object = scene.getObjectByName('OBJ');
+
             if(object != undefined){
                 update();
             }
+            else object = scene.getObjectByName('OBJ');
 
             requestAnimationFrame(animate);
             render();
