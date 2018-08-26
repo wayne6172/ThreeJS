@@ -1,36 +1,40 @@
-var shelljs = require('shelljs');
+var localStorage = require('localStorage');
 var express = require('express');
 var app = express();
 
-app.get('/getData',function(req,res){
+localStorage.clear();
 
-    shelljs.exec('main.exe', function(status,output){
-        /*console.log('Get Data Exit status:',status);
-        console.log('Exit output:',output);*/
+app.get('/api',function(req,res){
+    var player = parseInt(req.query.player);
+    var turn = String(req.query.turn);
 
-        var output = {
-            status: status,
-            output: output
-        };
+    var isTurnStr = localStorage.getItem('isTurn');
+    var isTurn;
+    if(isTurnStr === null){
+        isTurn = {turn: true,turn2: true};
+    }
+    else isTurn = JSON.parse(isTurnStr);
 
-        res.writeHead(200,{
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "Content-Type"
-        });
+    if(player === 0)isTurn.turn = (turn == 'true');
+    else isTurn.turn2 = (turn == 'true');
 
-        res.write(JSON.stringify((output)));
-        res.end();
+    var outputObj = {
+        status: 1,
+        output: isTurn.turn + ' ' + isTurn.turn2
+    };
+
+    localStorage.setItem('isTurn',JSON.stringify(isTurn));
+
+    console.log(isTurnStr);
+
+    res.writeHead(200,{
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type"
     });
-});
 
-app.get('/setData',function(req,res){
-    var player = req.query.player;
-
-    shelljs.exec('main.exe ' + player, function(status,output){
-        //console.log('Set Data Exit status:',status);
-        console.log("click");
-    });
+    res.write(JSON.stringify(outputObj));
+    res.end();
 });
 
 

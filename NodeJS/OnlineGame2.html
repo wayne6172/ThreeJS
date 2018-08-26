@@ -24,7 +24,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
     var camera, scene, renderer, stats, clock, raycaster, mouse = new THREE.Vector2();
-    var r = 40.0, player = 1, omega = Math.PI * 2, center = 60.0;
+    var r = 40.0, player = 1, omega = Math.PI * 2, center = 60.0, turn = true;
     var isTurn = [true,true], pickables = [], angle = [0.0,0.0], allCar = [];
 
     window.addEventListener('resize', onWindowResize, false);
@@ -93,18 +93,16 @@
     }
 
     function getUpdate() {
-        $.get("http://127.0.0.1:1337/getData",function (data) {
+        var param = {player: player, turn: turn};
+        var outputStr = $.param(param);
+        console.log(outputStr);
+        $.get("http://127.0.0.1:1337/api?" + outputStr,function (data) {
             if(data && data.output){
                 var coords = data.output.split(" ");
-                isTurn[0] = Boolean(parseInt(coords[0]));
-                isTurn[1] = Boolean(parseInt(coords[1]));
-                turn = isTurn[player];
+                isTurn[0] = (coords[0] == 'true');
+                isTurn[1] = (coords[1] == 'true');
             }
         });
-    }
-
-    function changeData() {
-        $.get("http://127.0.0.1:1337/setData?player=" + player,function (data) {});
     }
 
     function update(dt) {
@@ -142,7 +140,7 @@
         raycaster.setFromCamera(mouse, camera);
         var intersects = raycaster.intersectObjects(pickables);
         if (intersects.length > 0) {
-            changeData();
+            turn = !turn;
         }
     }
 
