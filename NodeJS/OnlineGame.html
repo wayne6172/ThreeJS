@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #title {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #ffff00
+        }
+        body {
+            overflow: hidden
+        }
+    </style>
+</head>
+<body>
+<div id="title">Basic Online Game Demo</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    var camera, scene, renderer, stats, clock, raycaster, mouse = new THREE.Vector2();
+    var r = 40.0, player = 0, omega = Math.PI * 2, center = 60.0;
+    var isTurn = [true,true], pickables = [], angle = [0.0,0.0], allCar = [];
+
+    window.addEventListener('resize', onWindowResize, false);
+    document.addEventListener('mousedown',onDocumentMouseDown,false);
+
+    init();
+    animate();
+
+    function buildVehicle() {
+        var car = new THREE.Object3D();
+        var mat = new THREE.MeshNormalMaterial();
+        var body = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 2, 20), mat);
+        car.add(body);
+        car.rotation.x = Math.PI / 2;
+        return car;
+    }
+
+    function init() {
+        scene = new THREE.Scene();
+        clock = new THREE.Clock();
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        stats.domElement.style.zIndex = 100;
+        document.body.appendChild(stats.domElement);
+
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0,0,280);
+        camera.lookAt(new THREE.Vector3());
+        scene.add(camera);
+
+        var gridXZ = new THREE.GridHelper(2000, 200, 'red', 'white');
+        gridXZ.rotation.x = Math.PI / 2;
+        scene.add(gridXZ);
+
+        var plane = new THREE.Mesh(new THREE.CircleGeometry(r,32),new THREE.MeshBasicMaterial({
+            transparent: true,
+            opacity: 0.5,
+            visible: true
+        }));
+        if(player === 0)plane.position.x = -center;
+        else plane.position.x = center;
+
+        pickables.push(plane);
+        scene.add(plane);
+        console.log(plane.position);
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x888888);
+
+        raycaster = new THREE.Raycaster();
+        document.body.appendChild(renderer.domElement);
+        ////////////////////////////////////////////////////////////////////////
+
+        var car1 = buildVehicle();
+        var car2 = buildVehicle();
+
+        car1.position.x = -center;
+        car2.position.x = center;
+
+        allCar.push(car1,car2);
+
+        scene.add(car1);
+        scene.add(car2);
+    }
+
+    function getUpdate() {
+        $.get("http://127.0.0.1:1337/getData",function (data) {
+            if(data && data.output){
+                var coords = data.output.split(" ");
+                isTurn[0] = Boolean(parseInt(coords[0]));
+                isTurn[1] = Boolean(parseInt(coords[1]));
+                turn = isTurn[player];
+            }
+        });
+    }
+
+    function changeData() {
+        console.log("click");
+        $.get("http://127.0.0.1:1337/setData?player=" + player,function (data) {});
+    }
+
+    function update(dt) {
+        if(isTurn[0] === true){
+            angle[0] += dt * omega;
+        }
+        if(isTurn[1] === true){
+            angle[1] += dt * omega;
+        }
+        allCar[0].position.copy(new THREE.Vector3(r,0,0).applyAxisAngle(new THREE.Vector3(0,0,1),angle[0]));
+        allCar[0].position.add(new THREE.Vector3(-center,0,0));
+
+        allCar[1].position.copy(new THREE.Vector3(r,0,0).applyAxisAngle(new THREE.Vector3(0,0,1),angle[1]));
+        allCar[1].position.add(new THREE.Vector3(center,0,0));
+    }
+
+    function animate() {
+        stats.update();
+
+        var dt = clock.getDelta();
+        getUpdate();
+        update(dt);
+
+        requestAnimationFrame(animate);
+        render();
+    }
+    function render() {
+        renderer.render(scene, camera);
+    }
+    function onDocumentMouseDown(event) {
+        event.preventDefault();
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        var intersects = raycaster.intersectObjects(pickables);
+        if (intersects.length > 0) {
+            changeData();
+        }
+    }
+
+    function onWindowResize() {
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+</script>
+</body>
+</html>

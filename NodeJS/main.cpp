@@ -1,24 +1,37 @@
 #include <stdio.h>
-#include <stdlib.h>  // for exit, strtol
+#include <stdlib.h>
+#include <string.h>
 
-int factorial (int n)
+int main(int argc, char const *argv[])
 {
-	if (n == 1) 
-		return 1;
-	else
-		return n*factorial (n-1);
-}
+    FILE *fp = fopen("data.txt","rb");
 
-int main(int argc, char *argv[]) {
-    if ( argc != 2 ) {
-    	printf("0");
-		exit (1);
-    } 
+    if(fp == NULL){
+        fclose(fp);
+        fp = fopen("data.txt","wb");
 
-	int num;
-	num = atoi (argv[1]);
+        bool isTurn[2] = {true,true};
+        fwrite(isTurn,sizeof(bool),2,fp);
+        fclose(fp);
 
-	printf("%d", factorial(num) ); // output
+        fp = fopen("data.txt","rb");
+    }
+
+    bool isTurn[2];
+    fread(isTurn,sizeof(bool),2,fp);
+
+    if(argc == 1){
+        printf("%d %d",isTurn[0],isTurn[1]);
+    }
+    else if(argc == 2){
+        fclose(fp);
+
+        fp = fopen("data.txt","wb");
+        isTurn[atoi(argv[1])] = !isTurn[atoi(argv[1])];
+        fwrite(isTurn,sizeof(bool),2,fp);
+    }
+
+    fclose(fp);
+
     return 0;
 }
-
