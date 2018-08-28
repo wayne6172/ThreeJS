@@ -95,7 +95,6 @@
     function getUpdate() {
         var param = {player: player, turn: turn};
         var outputStr = $.param(param);
-        console.log(outputStr);
         $.get("http://127.0.0.1:1337/api?" + outputStr,function (data) {
             if(data && data.output){
                 var coords = data.output.split(" ");

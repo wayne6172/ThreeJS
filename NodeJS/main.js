@@ -25,7 +25,6 @@ app.get('/api',function(req,res){
 
     localStorage.setItem('isTurn',JSON.stringify(isTurn));
 
-    console.log(isTurnStr);
 
     res.writeHead(200,{
         "Content-Type": "application/json",
