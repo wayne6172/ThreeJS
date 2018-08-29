@@ -23,6 +23,8 @@
     <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
     <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script src="https://rawgit.com/mkkellogg/TrailRendererJS/master/js/TrailRenderer.js"></script>
+
     <script>
         var camera, scene, renderer, controls, stats, clock;
         var keyboard = new KeyboardState();
@@ -72,7 +74,7 @@
 
             renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(0x888888);
+            //renderer.setClearColor(0x888888);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
 
@@ -84,7 +86,27 @@
             car = buildVehicle();
             scene.add(car);
 
-            if(k % 2 == 0)k *= 2;
+            if(k % 2 === 0)k *= 2;
+
+            var trailHeadGeometry = [];
+            trailHeadGeometry.push(
+                new THREE.Vector3( -10.0, 0.0, 0.0 ),
+                new THREE.Vector3( 0.0, 0.0, 0.0 ),
+                new THREE.Vector3( 10.0, 0.0, 0.0 )
+            );
+
+// create the trail renderer object
+            var trail = new THREE.TrailRenderer( scene, false );
+
+// create material for the trail renderer
+            var trailMaterial = THREE.TrailRenderer.createBaseMaterial();
+
+// specify length of trail
+            var trailLength = 150;
+
+// initialize the trail
+            trail.initialize( trailMaterial, trailLength, false, 3, trailHeadGeometry, car);
+
         }
 
         function update() {
