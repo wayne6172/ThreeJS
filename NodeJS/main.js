@@ -1,44 +1,25 @@
-var localStorage = require('localStorage');
-var express = require('express');
-var app = express();
+var app = require('express')();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+var port = process.env.PORT || 3000;
 
-localStorage.clear();
+var playerSum = 0;
 
-app.get('/api',function(req,res){
-    var player = parseInt(req.query.player);
-    var turn = String(req.query.turn);
-
-    var isTurnStr = localStorage.getItem('isTurn');
-    var isTurn;
-    if(isTurnStr === null){
-        isTurn = {turn: true,turn2: true};
-    }
-    else isTurn = JSON.parse(isTurnStr);
-
-    if(player === 0)isTurn.turn = (turn == 'true');
-    else isTurn.turn2 = (turn == 'true');
-
-    var outputObj = {
-        status: 1,
-        output: isTurn.turn + ' ' + isTurn.turn2
-    };
-
-    localStorage.setItem('isTurn',JSON.stringify(isTurn));
-
-
-    res.writeHead(200,{
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type"
-    });
-
-    res.write(JSON.stringify(outputObj));
-    res.end();
+app.get('/',function (req, res) {
+    res.sendFile(__dirname + '/index.html');
 });
 
+io.on('connection',function (socket) {
+    socket.on('toggle',function (msg) {
 
-var server = app.listen(1337,function(){
-    var host = server.address().address;
-    var port = server.address().port;
-    console.log('server started on http://' + host + ':' + port);
+    });
+
+    socket.on('init',function (msg) {
+        playerSum++;
+        io.emit('init',String(playerSum));
+    });
+});
+
+http.listen(port,function () {
+   console.log('listening on *:' + port);
 });

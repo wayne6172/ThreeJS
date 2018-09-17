@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #title {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #ffff00
+        }
+
+        body {
+            overflow: hidden
+        }
+
+    </style>
+</head>
+<body>
+<div id="title">CG Homework1 Demo</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script>
+    var camera, scene, renderer, stats, loader;
+    var angle = 0.0, box, woodPlank;
+
+    window.addEventListener('resize',onWindowResize,false);
+
+    init();
+    animate();
+
+    function buildBox(){
+        var texture = loader.load('https://i.imgur.com/bv24XBd.jpg?1');
+        var sideTexture = loader.load('https://i.imgur.com/bv24XBd.jpg?1');
+        sideTexture.repeat.set(1,0.5);
+
+        var matArray = [];
+        matArray.push(new THREE.MeshPhongMaterial({
+            map: sideTexture
+        }));
+        matArray.push(new THREE.MeshPhongMaterial({
+            map: sideTexture
+        }));
+        matArray.push(new THREE.MeshPhongMaterial({
+            map: texture
+        }));
+        matArray.push(new THREE.MeshPhongMaterial({
+            map: texture
+        }));
+        matArray.push(new THREE.MeshPhongMaterial({
+            map: sideTexture
+        }));
+        matArray.push(new THREE.MeshPhongMaterial({
+            map: sideTexture
+        }));
+
+        var allMat = new THREE.MultiMaterial(matArray);
+        var body = new THREE.Mesh(new THREE.BoxGeometry(40,20,40),allMat);
+
+        return body;
+    }
+
+    function bulidSlope() {
+        var texture = loader.load('https://i.imgur.com/bv24XBd.jpg?1');
+
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push(
+            new THREE.Vector3(0,0,0),
+            new THREE.Vector3(0,20,0),
+            new THREE.Vector3(40,0,0),
+            new THREE.Vector3(0,0,-10),
+            new THREE.Vector3(0,20,-10),
+            new THREE.Vector3(40,0,-10)
+        );
+
+        var face = new THREE.Face3(0,2,1);      // 往-Z軸看，三角
+        face.materialIndex = 0;
+        geometry.faces.push(face);
+        face = new THREE.Face3(0,4,3);      // 往+X軸看，平面其1三角
+        face.materialIndex = 1;
+        geometry.faces.push(face);
+        face = new THREE.Face3(0,1,4);      // 往+X軸看，平面其1三角
+        face.materialIndex = 1;
+        geometry.faces.push(face);
+        face = new THREE.Face3(3,2,0);      // 往+Y軸看，平面其1三角
+        face.materialIndex = 2;
+        geometry.faces.push(face);
+        face = new THREE.Face3(3,5,2);      // 往+Y軸看，平面其1三角
+        face.materialIndex = 2;
+        geometry.faces.push(face);
+        face = new THREE.Face3(1,2,5);      // 斜坡平面其1三角
+        face.materialIndex = 3;
+        geometry.faces.push(face);
+        face = new THREE.Face3(1,5,4);      // 斜坡平面其1三角
+        face.materialIndex = 3;
+        geometry.faces.push(face);
+        face = new THREE.Face3(3,4,5);
+        face.materialIndex = 4;
+        geometry.faces.push(face);
+
+
+        var x = 10 / Math.sqrt(40*40+20*20);
+
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(0.5, 0)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 0.5), new THREE.Vector2(1, 0)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 0.5), new THREE.Vector2(1, 0.5)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0.25, 1), new THREE.Vector2(0.25, 0)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(0.25, 1)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 0), new THREE.Vector2(1, x)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, x), new THREE.Vector2(0, x)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 0.5), new THREE.Vector2(1, 0)]);
+
+        geometry.computeBoundingSphere();
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+
+        return new THREE.Mesh(geometry,new THREE.MeshPhongMaterial({map: texture}));
+    }
+
+    function init() {
+        scene = new THREE.Scene();
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        stats.domElement.style.zIndex = 100;
+        document.body.appendChild(stats.domElement);
+
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0,0,140);
+        camera.lookAt(new THREE.Vector3());
+        scene.add(camera);
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x888888);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableKeys = false;
+
+        document.body.appendChild(renderer.domElement);
+        ////////////////////////////////////////////////////////////////////////
+        let light = new THREE.PointLight(0xffffff);
+        light.position.set(0,0,120);
+        scene.add(light);
+
+        loader = new THREE.TextureLoader();
+        loader.crossOrigin = '';
+
+        woodPlank = new THREE.Object3D();
+
+        var body = buildBox();
+        var slope = bulidSlope();
+
+        slope.position.set(20,-10,-10);
+        woodPlank.add(body,slope);
+
+        scene.add(woodPlank);
+    }
+
+    function animate() {
+        controls.update();
+        stats.update();
+
+        angle += 0.01;
+        woodPlank.rotation.set(angle,0,angle);
+
+        requestAnimationFrame(animate);
+        render();
+    }
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+    function onWindowResize(){
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+</script>
+</body>
+
+</html>

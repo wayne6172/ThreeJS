@@ -18,17 +18,61 @@
     </style>
 </head>
 <body>
-<div id="title">Basic Online Game Demo</div>
+<div id="title">Basic Online Game Demo<br><button id="login">login</button></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
 <script>
-    var camera, scene, renderer, stats, clock, raycaster, mouse = new THREE.Vector2();
-    var r = 40.0, player = 0, omega = Math.PI * 2, center = 60.0, turn = true;
-    var isTurn = [true,true], pickables = [], angle = [0.0,0.0], allCar = [];
+    var camera, scene, renderer, stats, clock, raycaster, mouse = new THREE.Vector2(), socket;
+    var r = 40.0, player = 0, omega = Math.PI * 2, turn = true;
+    var pickables = [], allCar = [];
 
     window.addEventListener('resize', onWindowResize, false);
     document.addEventListener('mousedown',onDocumentMouseDown,false);
+
+
+
+    $(function () {
+        socket = io();
+        console.log(socket);
+
+        socket.on('toggle',function (msg) {
+
+        });
+
+        socket.on('init',function (msg) {
+            player = parseInt(msg);
+        });
+    });
+
+    $('#login').click(function (){
+        socket.emit('init', 33);
+    });
+
+    class Car{
+        constructor(){
+            this.object = new THREE.Object3D();
+            this.object.position.set((player - 1) * r * 2,0,0);
+            this.car = buildVehicle();
+            this.object.add(this.car);
+            this.car.position.set(r,0,0);
+            this.angle = 0;
+            this.tuggle = true;
+
+            this.plane = new THREE.Mesh(new THREE.CircleGeometry(r,32),new THREE.MeshBasicMaterial({
+                transparent: true,
+                opacity: 0.5,
+                visible: true
+            }));
+
+        }
+
+        update(dt){
+            this.angle += dt * omega;
+            this.car.position.copy(new THREE.Vector3(r,0,0).applyAxisAngle(new THREE.Vector3(0,0,1),this.angle));
+        }
+    }
 
     init();
     animate();
@@ -60,17 +104,6 @@
         gridXZ.rotation.x = Math.PI / 2;
         scene.add(gridXZ);
 
-        var plane = new THREE.Mesh(new THREE.CircleGeometry(r,32),new THREE.MeshBasicMaterial({
-            transparent: true,
-            opacity: 0.5,
-            visible: true
-        }));
-        if(player === 0)plane.position.x = -center;
-        else plane.position.x = center;
-
-        pickables.push(plane);
-        scene.add(plane);
-        console.log(plane.position);
 
         renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -80,50 +113,13 @@
         document.body.appendChild(renderer.domElement);
         ////////////////////////////////////////////////////////////////////////
 
-        var car1 = buildVehicle();
-        var car2 = buildVehicle();
 
-        car1.position.x = -center;
-        car2.position.x = center;
-
-        allCar.push(car1,car2);
-
-        scene.add(car1);
-        scene.add(car2);
-    }
-
-    function getUpdate() {
-        var param = {player: player, turn: turn};
-        var outputStr = $.param(param);
-        $.get("http://127.0.0.1:1337/api?" + outputStr,function (data) {
-            if(data && data.output){
-                var coords = data.output.split(" ");
-                isTurn[0] = (coords[0] == 'true');
-                isTurn[1] = (coords[1] == 'true');
-            }
-        });
-    }
-
-    function update(dt) {
-        if(isTurn[0] === true){
-            angle[0] += dt * omega;
-        }
-        if(isTurn[1] === true){
-            angle[1] += dt * omega;
-        }
-        allCar[0].position.copy(new THREE.Vector3(r,0,0).applyAxisAngle(new THREE.Vector3(0,0,1),angle[0]));
-        allCar[0].position.add(new THREE.Vector3(-center,0,0));
-
-        allCar[1].position.copy(new THREE.Vector3(r,0,0).applyAxisAngle(new THREE.Vector3(0,0,1),angle[1]));
-        allCar[1].position.add(new THREE.Vector3(center,0,0));
     }
 
     function animate() {
         stats.update();
 
         var dt = clock.getDelta();
-        getUpdate();
-        update(dt);
 
         requestAnimationFrame(animate);
         render();
@@ -140,6 +136,7 @@
         var intersects = raycaster.intersectObjects(pickables);
         if (intersects.length > 0) {
             turn = !turn;
+            socket.emit('toggle',turn);
         }
     }
 
