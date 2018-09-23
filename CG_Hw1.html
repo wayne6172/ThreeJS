@@ -26,7 +26,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 <script>
     var camera, scene, renderer, stats, loader;
-    var angle = 0.0, box, woodPlank;
+    var box, woodPlank;
 
     window.addEventListener('resize',onWindowResize,false);
 
@@ -72,9 +72,9 @@
             new THREE.Vector3(0,0,0),
             new THREE.Vector3(0,20,0),
             new THREE.Vector3(40,0,0),
-            new THREE.Vector3(0,0,-10),
-            new THREE.Vector3(0,20,-10),
-            new THREE.Vector3(40,0,-10)
+            new THREE.Vector3(0,0,-20),
+            new THREE.Vector3(0,20,-20),
+            new THREE.Vector3(40,0,-20)
         );
 
         var face = new THREE.Face3(0,2,1);      // 往-Z軸看，三角
@@ -103,13 +103,13 @@
         geometry.faces.push(face);
 
 
-        var x = 10 / Math.sqrt(40*40+20*20);
+        var x = 20 / Math.sqrt(40*40+20*20);
 
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(0.5, 0)]);
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 0.5), new THREE.Vector2(1, 0)]);
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 0.5), new THREE.Vector2(1, 0.5)]);
-        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0.25, 1), new THREE.Vector2(0.25, 0)]);
-        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(0.25, 1)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0.5, 1), new THREE.Vector2(0.5, 0)]);
+        geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 1), new THREE.Vector2(0.5, 1)]);
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, 0), new THREE.Vector2(1, x)]);
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, x), new THREE.Vector2(0, x)]);
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 0.5), new THREE.Vector2(1, 0)]);
@@ -144,7 +144,7 @@
         document.body.appendChild(renderer.domElement);
         ////////////////////////////////////////////////////////////////////////
         let light = new THREE.PointLight(0xffffff);
-        light.position.set(0,0,120);
+        light.position.set(120,120,120);
         scene.add(light);
 
         loader = new THREE.TextureLoader();
@@ -155,7 +155,7 @@
         var body = buildBox();
         var slope = bulidSlope();
 
-        slope.position.set(20,-10,-10);
+        slope.position.set(20,-10,0);
         woodPlank.add(body,slope);
 
         scene.add(woodPlank);
@@ -164,9 +164,6 @@
     function animate() {
         controls.update();
         stats.update();
-
-        angle += 0.01;
-        woodPlank.rotation.set(angle,0,angle);
 
         requestAnimationFrame(animate);
         render();

@@ -61,7 +61,7 @@
                 }
             }
 
-            var onError = function (xhr) {}
+            var onError = function (xhr) {console.log('error happen');}
 
             var mtlLoader = new THREE.MTLLoader();
             mtlLoader.setPath('model/');
@@ -115,7 +115,7 @@
             document.body.appendChild(renderer.domElement);
             ////////////////////////////////////////////////////////////////////////
 
-            readModel('police_car');
+            readModel('train');
             object = scene.getObjectByName('OBJ');
             if(k % 2 == 0)k *= 2;
         }
@@ -134,6 +134,8 @@
             object.position.set(nextX, 13, nextZ);
 
             object.rotation.y = Math.atan2(dz,dx);
+
+            object.position.set(0,0,0);
         }
 
         function animate() {
@@ -145,6 +147,7 @@
                 update();
             }
             else object = scene.getObjectByName('OBJ');
+
 
             requestAnimationFrame(animate);
             render();
