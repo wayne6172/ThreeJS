@@ -114,9 +114,10 @@
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(1, x), new THREE.Vector2(0, x)]);
         geometry.faceVertexUvs[0].push([new THREE.Vector2(0, 0), new THREE.Vector2(0, 0.5), new THREE.Vector2(1, 0)]);
 
+
         geometry.computeBoundingSphere();
         geometry.computeFaceNormals();
-        geometry.computeVertexNormals();
+        //geometry.computeVertexNormals();
 
         return new THREE.Mesh(geometry,new THREE.MeshPhongMaterial({map: texture}));
     }
