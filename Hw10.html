@@ -26,7 +26,6 @@
     <script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/OBJLoader.js"></script>
 
     <script>
-
         var camera, scene, renderer, stats, object, angle = 0.0, k = 5, time = 0.0, clock;
         var radius = 250, time = 0;
         var omega = Math.PI * 2 / 30;
@@ -51,7 +50,6 @@
             object.scale.set(scaleSet, scaleSet, scaleSet);
             object.position.set(-center.x * scaleSet, -center.y * scaleSet, -center.z * scaleSet);
 
-
             return theObject;
         }
 
@@ -63,7 +61,7 @@
                 }
             }
 
-            var onError = function (xhr) {console.log('error happen');}
+            var onError = function (xhr) {}
 
             var mtlLoader = new THREE.MTLLoader();
             mtlLoader.setPath('model/');
@@ -77,7 +75,6 @@
                 objLoader.load(modelName + '.obj',function (object) {
                     let theObject = unitize(object,targetSize);
                     theObject.name = 'OBJ';
-                    theObject.add(new THREE.BoxHelper(theObject))
                     scene.add(theObject);
                 },onProgress,onError);
             })
@@ -137,8 +134,6 @@
             object.position.set(nextX, 13, nextZ);
 
             object.rotation.y = Math.atan2(dz,dx);
-
-            console.log(object);
         }
 
         function animate() {
@@ -150,7 +145,6 @@
                 update();
             }
             else object = scene.getObjectByName('OBJ');
-
 
             requestAnimationFrame(animate);
             render();
@@ -167,7 +161,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(width, height);
         }
-
     </script>
 </body>
 </html>
