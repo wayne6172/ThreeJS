@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #title {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #ffff00
+        }
+
+        body {
+            overflow: hidden
+        }
+
+    </style>
+</head>
+<body>
+<div id="title">Game Homework1 Demo</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+<script>
+    var camera, scene, renderer, stats, loader;
+    var angle = 0.0, box, woodPlank;
+
+    window.addEventListener('resize',onWindowResize,false);
+
+    init();
+    animate();
+
+    function unitize(object,targetSize) {
+            var box3 = new THREE.Box3();
+            box3.setFromObject(object);
+            var size = new THREE.Vector3();
+            size.subVectors(box3.max,box3.min);
+            var center = new THREE.Vector3();
+            center.addVectors(box3.max,box3.min).multiplyScalar(0.5);
+
+            console.log('center: ' + center.x + ', ' + center.y + ', ' + center.z);
+            console.log('size: ' + size.x + ', ' + size.y + ', ' + size.z);
+
+            var objSize = Math.max(size.x, size.y, size.z);
+            var scaleSet = targetSize / objSize;
+
+            var theObject = new THREE.Object3D();
+            theObject.add(object);
+            object.scale.set(scaleSet, scaleSet, scaleSet);
+            object.position.set(-center.x * scaleSet, -center.y * scaleSet, -center.z * scaleSet);
+
+            return theObject;
+        }
+
+        function readModel(modelName, targetSize = 40){
+            var onProgress = function (xhr) {
+                if(xhr.lengthComputable){
+                    var percentComplete = xhr.loaded / xhr.total * 100;
+                    console.log(Math.round(percentComplete,2) + '% downloaded');
+                }
+            }
+
+            var onError = function (xhr) {}
+
+            var mtlLoader = new THREE.MTLLoader();
+            mtlLoader.setPath('model/');
+            mtlLoader.load(modelName + '.mtl',function (materials) {
+
+                materials.preload();
+
+                var objLoader = new THREE.OBJLoader();
+                objLoader.setMaterials(materials);
+                objLoader.setPath('model/');
+                objLoader.load(modelName + '.obj',function (object) {
+                    let theObject = unitize(object,targetSize);
+                    theObject.name = 'OBJ';
+                    scene.add(theObject);
+                },onProgress,onError);
+            })
+        }
+
+    function init() {
+        scene = new THREE.Scene();
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0px';
+        stats.domElement.style.zIndex = 100;
+        document.body.appendChild(stats.domElement);
+
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(0,0,140);
+        camera.lookAt(new THREE.Vector3());
+        scene.add(camera);
+
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x888888);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableKeys = false;
+
+        document.body.appendChild(renderer.domElement);
+        ////////////////////////////////////////////////////////////////////////
+        let light = new THREE.PointLight(0xffffff);
+        light.position.set(120,120,120);
+        scene.add(light);
+
+
+        
+    }
+
+    function animate() {
+        controls.update();
+        stats.update();
+
+        requestAnimationFrame(animate);
+        render();
+    }
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+    function onWindowResize(){
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    }
+</script>
+</body>
+
+</html>
