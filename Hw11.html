@@ -35,7 +35,7 @@
     animate();
 
     function buildVehicle() {
-        text = new THREE_Text.SpriteText2D("Center",{align: THREE_Text.textAlign.center,font: "30px Arial"});
+        text = new THREE_Text.SpriteText2D("Center",{align: THREE_Text.textAlign.center,font: "30px"});
         text.position.y = 20;
         text.scale.set(0.4,0.4,0.4);
         var car = new THREE.Object3D();
@@ -69,7 +69,6 @@
         renderer.setClearColor(0x888888);
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-
         controls.enableKeys = false;
 
         document.body.appendChild(renderer.domElement);

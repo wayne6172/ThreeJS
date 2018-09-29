@@ -63,7 +63,6 @@
                     this.pos.y = -wallLength / 2 + 1 + 5;
                     this.vel.y *= -0.9;
                 }
-
             }
 
             checkCollision(anotherCar) {
@@ -217,7 +216,7 @@
             raycaster.setFromCamera(mouse, camera);
             var intersects = raycaster.intersectObjects(pickables);
             if (intersects.length > 0) {
-                allCar[allCar.length] = new Car(intersects[0].point);
+                allCar.push(new Car(intersects[0].point));
             }
         }
     </script>
