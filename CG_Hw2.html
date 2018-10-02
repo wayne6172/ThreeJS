@@ -101,7 +101,7 @@
 
     function buildCylinder() {
         var texture = loader.load('https://i.imgur.com/bv24XBd.jpg?1');
-        var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(7,7,10,30,1,true),new THREE.MeshPhongMaterial({map: texture, side: THREE.BackSide}));
+        var cylinder = new THREE.Mesh(new THREE.CylinderGeometry(5,5,10,30,1,true),new THREE.MeshPhongMaterial({map: texture, side: THREE.BackSide}));
 
         return cylinder;
     }
@@ -243,7 +243,7 @@
         box = buildBox2();
         cylinder = buildCylinder();
         cylinder.rotation.x = -Math.PI / 2;
-        cylinder.position.set(17,10,5);
+        cylinder.position.set(15,10,6);
         woodPlank2.add(box,cylinder);
         woodPlank2.position.y = 50;
         //woodPlank2.rotation.z = Math.PI / 2;
