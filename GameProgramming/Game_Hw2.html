@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Hw2 Demo</title>
+    <style>
+        #title {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #ffff00
+        }
+        body {
+            overflow: hidden
+        }
+        #speed{
+            position: absolute;
+            bottom: 0px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <div id="title">Game Homework2 Demo</div>
+    <div id="speed">Speed: 5.0</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/96/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+    <script type="x-shader/x-vertex" id="vertexShaderDepth">
+        varying vec2 vUV;
+
+        void main() {
+            vUV = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    </script>
+    <script type="x-shader/x-fragment" id="fragmentShaderDepth">
+        uniform sampler2D texture;
+        varying vec2 vUV;
+
+        vec4 pack_depth(const in float depth) {
+            const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);
+            const vec4 bit_mask = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);
+            vec4 res = fract(depth * bit_shift);
+            res -= res.xxyz * bit_mask;
+            return res;
+        }
+
+        void main() {
+            vec4 pixel = texture2D(texture, vUV);
+            if (pixel.a < 0.5) discard;
+            gl_FragData[0] = pack_depth(gl_FragCoord.z);
+        }
+    </script>
+
+    <!-- //---------------------------THREEJS----------------------------- /-->
+
+    <script>
+        var camera, scene, renderer, stats, loader, light, car, lightAngle = 0.0;
+        var keyboard = new KeyboardState();
+
+        (function () {
+            Math.clamp = function (val, min, max) {
+                return Math.min(Math.max(val,min),max);
+            }
+        })();
+
+        class FrontTire{
+            constructor(){
+                this.angle = 0.0;
+                this.body = buildTire();
+                this.tire = new THREE.Object3D().add(this.body);
+            }
+            update(){
+                if(keyboard.pressed("left"))
+                    this.angle += 0.07;
+                else if(keyboard.pressed("right"))
+                    this.angle -= 0.07;
+                else this.angle = 0.0;
+
+                this.angle = Math.clamp(this.angle, -0.6, 0.6);
+                this.body.rotation.y = this.angle;
+            }
+        }
+
+        class Car{
+            constructor(){
+                this.speed = 5.0;
+                this.angle = 0.0;
+                this.pos = new THREE.Vector3(0,10,0);
+                this.vel = new THREE.Vector3(this.speed,0,0);
+                this.rearTire = new THREE.Object3D();
+                this.frontTire = new FrontTire();
+                this.body = new THREE.Object3D();
+                this.leftRearTire = buildTire();
+                this.rightRearTire = buildTire();
+
+                this.frontTire.tire.position.set(12,-5,0);
+                this.leftRearTire.position.z = -7.5;
+                this.rightRearTire.position.z = 7.5;
+                this.rearTire.add(this.leftRearTire,this.rightRearTire);
+                this.rearTire.position.set(-12,-5,0);
+
+                var box = new THREE.Mesh(new THREE.BoxGeometry(40,10,15),new THREE.MeshPhongMaterial({color: 0x0000cc}));
+                box.castShadow = true;
+                this.body.add(this.rearTire,box,this.frontTire.tire);
+                this.body.position.copy(this.pos);
+
+                scene.add(this.body);
+            }
+
+            update(dt){
+                keyboard.update();
+                this.frontTire.update();
+
+                if(keyboard.pressed("space"))
+                    this.speed = 0.0;
+                if(keyboard.pressed("up"))
+                    this.speed += 5;
+                if(keyboard.pressed("down"))
+                    this.speed -= 5;
+
+                this.speed = Math.clamp(this.speed, -100.0, 100.0);
+                this.vel = new THREE.Vector3(this.speed,0,0).applyAxisAngle(new THREE.Vector3(0,1,0),this.angle);
+                var theta = this.frontTire.angle;
+
+                if(theta !== 0.0) {
+                    var RC = this.pos.clone().add(new THREE.Vector3(-12, 0, -24 / Math.tan(theta)).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.angle)); //!
+                    var omega = this.speed * Math.tan(theta) / 24;
+
+                    var nextPos = RC.clone().add(this.pos.clone().sub(RC).applyAxisAngle(new THREE.Vector3(0, 1, 0), omega * dt));
+                    this.vel = nextPos.clone().sub(this.pos).setLength(this.speed);
+
+                    this.pos.copy(nextPos);
+                    this.angle += omega * dt;
+                    this.body.rotation.y = this.angle;
+                }
+                else {
+                    this.pos.add(this.vel.clone().multiplyScalar(dt));
+                }
+                this.body.position.copy(this.pos);
+
+                this.frontTire.body.rotation.z += -this.speed * dt / (2 * Math.PI * 5);
+                this.rightRearTire.rotation.z += -this.speed * dt / (2 * Math.PI * 5);
+                this.leftRearTire.rotation.z += -this.speed * dt / (2 * Math.PI * 5);
+            }
+        }
+
+        init();
+        animate();
+
+        function buildTire() {
+            var tireTexture = loader.load('https://i.imgur.com/jPX4y1n.png?1');    //輪胎
+            var tireSideTexture = loader.load('https://i.imgur.com/21rKfjX.jpg?2'); //胎痕
+            tireSideTexture.wrapS = THREE.RepeatWrapping;
+            tireSideTexture.repeat.set(6,1);
+
+            var allBody = new THREE.Object3D();
+            var tire = new THREE.Mesh(new THREE.CircleGeometry(5,64),new THREE.MeshPhongMaterial({map: tireTexture, transparent: true, side: THREE.DoubleSide}));
+            var tire2 = new THREE.Mesh(new THREE.CircleGeometry(5,64),new THREE.MeshPhongMaterial({map: tireTexture, transparent: true, side: THREE.DoubleSide}));
+            var tireSide = new THREE.Mesh(new THREE.CylinderGeometry(5,5,4,64,1,true),new THREE.MeshPhongMaterial({map: tireSideTexture, side: THREE.DoubleSide}));
+
+            tire.customDepthMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    texture: {
+                        type: 't',
+                        value: tireTexture
+                    }
+                },
+                vertexShader: document.getElementById('vertexShaderDepth').textContent,
+                fragmentShader: document.getElementById('fragmentShaderDepth').textContent
+            });
+
+            tire2.customDepthMaterial = new THREE.ShaderMaterial({
+                uniforms: {
+                    texture: {
+                        type: 't',
+                        value: tireTexture
+                    }
+                },
+                vertexShader: document.getElementById('vertexShaderDepth').textContent,
+                fragmentShader: document.getElementById('fragmentShaderDepth').textContent
+            });
+
+            tire.position.set(0,0,2);
+            tire2.position.set(0,0,-2);
+            tireSide.rotation.x = Math.PI / 2;
+            allBody.add(tire,tire2,tireSide);
+
+            allBody.traverse(mesh =>{
+                    if(mesh instanceof THREE.Mesh){
+                        mesh.castShadow = true;
+                    }
+                }
+            );
+            return allBody;
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            clock = new THREE.Clock();
+            stats = new Stats();
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.top = '0px';
+
+            stats.domElement.style.zIndex = 100;
+            document.body.appendChild(stats.domElement);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 4000);
+            camera.position.set(70,70,70);
+            camera.lookAt(new THREE.Vector3());
+            scene.add(camera);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x888888);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFShadowMap;
+
+            light = new THREE.DirectionalLight(0x666666);
+            light.shadow.camera.top = -500;
+            light.shadow.camera.left = -500;
+            light.shadow.camera.bottom = 500;
+            light.shadow.camera.right = 500;
+            light.castShadow = true;
+            light.shadow.mapSize.width = light.shadow.mapSize.height = 1024;
+
+            light.shadow.camera.near = 5;
+            light.shadow.camera.far = 4000;
+            light.shadow.camera.fov = light.angle / Math.PI * 180;
+
+
+            scene.add(light,new THREE.DirectionalLightHelper(light), new THREE.CameraHelper(light.shadow.camera),
+                new THREE.AmbientLight(0x333333));
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableKeys = false;
+
+            document.body.appendChild(renderer.domElement);
+
+            loader = new THREE.TextureLoader();
+            loader.crossOrigin = '';
+
+            //--------------------------基本初始化完畢----------------------------//
+
+            var plane = new THREE.Mesh(new THREE.PlaneGeometry(20000,20000),new THREE.MeshPhongMaterial());
+            plane.rotation.x = -Math.PI / 2;
+            plane.receiveShadow = true;
+
+            scene.add(plane);
+
+            car = new Car();
+            light.target = car.body;
+        }
+
+        function animate() {
+            stats.update();
+
+            lightAngle += 0.01;
+            light.position.copy(new THREE.Vector3(300,0,0).applyAxisAngle(new THREE.Vector3(0,0,1),lightAngle));
+
+            var dt = clock.getDelta();
+            car.update(dt);
+
+            document.getElementById("speed").innerHTML = "speed: " + String(car.speed);
+
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            renderer.render(scene,camera);
+        }
+
+    </script>
+</body>
+</html>
