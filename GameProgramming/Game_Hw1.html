@@ -195,11 +195,11 @@
 
         document.body.appendChild(renderer.domElement);
         ////////////////////////////////////////////////////////////////////////
-        light = new THREE.AmbientLight(0xffffff);
+        light = new THREE.PointLight(0xffffff);
         light.position.set(0,0,-100);
         scene.add(light);
         pointLightHelper = new THREE.PointLightHelper(light,3);
-        scene.add(pointLightHelper);
+        scene.add(pointLightHelper, new THREE.AmbientLight(0x444444));
 
         loader = new THREE.TextureLoader();
         loader.crossOrigin = '';

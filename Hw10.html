@@ -61,7 +61,7 @@
                 }
             }
 
-            var onError = function (xhr) {}
+            var onError = function (xhr) {};
 
             var mtlLoader = new THREE.MTLLoader();
             mtlLoader.setPath('model/');
@@ -109,7 +109,6 @@
             renderer.setClearColor(0x888888);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
-
             controls.enableKeys = false;
 
             document.body.appendChild(renderer.domElement);

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing</title>
+    <style>
+        body {
+            overflow: hidden
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/96/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script src="https://rawgit.com/jyunming-chen/tutsplus/master/js/text2D.js"></script>
+
+    <script>
+        var camera, scene, renderer, stats, dashboard, dashboardCamera, control, speedLine, speed = -60;
+        var miniMapBorder, miniMapBorderCamera, miniMapCamera, body, compass;
+
+        init();
+        animate();
+
+        function buildCompass(){
+            // 4 / 5
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(
+                new THREE.Vector3(0,Math.sqrt(3),0),
+                new THREE.Vector3(-1,0,0),
+                new THREE.Vector3(1,0,0),
+                new THREE.Vector3(0,-Math.sqrt(3),0)
+            );
+
+            var face = new THREE.Face3(0,1,2);
+            face.materialIndex = 0;
+            geometry.faces.push(face);
+            face = new THREE.Face3(2,1,3);
+            face.materialIndex = 1;
+            geometry.faces.push(face);
+
+            geometry.computeBoundingSphere();
+            geometry.computeFaceNormals();
+            geometry.computeVertexNormals();
+
+            var matArray = [];
+            matArray.push(new THREE.MeshBasicMaterial({color: 0xff0000}),new THREE.MeshBasicMaterial({color: 0xffffff}));
+            return new THREE.Mesh(geometry,matArray);
+        }
+
+        function buildLine() {
+            var lineGeo = new THREE.Geometry();
+            lineGeo.vertices.push(new THREE.Vector3(0,0,0),new THREE.Vector3(-4.5,0,0));
+
+            return new THREE.Line(lineGeo, new THREE.LineBasicMaterial({color: 0xff0000,depthTest: false}));
+        }
+
+        function buildMiniMap() {
+            miniMapBorder = new THREE.Scene();
+            miniMapBorderCamera = new THREE.OrthographicCamera(-10.1, 10.1, 10.1, -10.1, -50, 50);
+            miniMapBorderCamera.position.z = 20;
+
+            miniMapCamera = new THREE.OrthographicCamera(-30,30,30,-30,-70,70);
+            miniMapCamera.up.set(0,0,-1);
+            miniMapCamera.position.y = 60;
+            miniMapCamera.lookAt(new THREE.Vector3());
+
+
+            var lineGeo = new THREE.Geometry();
+            lineGeo.vertices.push(new THREE.Vector3(-10, -10, 0),
+                new THREE.Vector3(10, -10, 0),
+                new THREE.Vector3(10, 10, 0),
+                new THREE.Vector3(-10, 10, 0),
+                new THREE.Vector3(-10, -10, 0));
+            var line = new THREE.Line(lineGeo,new THREE.LineBasicMaterial({color: 0}));
+            miniMapBorder.add(line);
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            clock = new THREE.Clock();
+            stats = new Stats();
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.top = '0px';
+
+            stats.domElement.style.zIndex = 100;
+            document.body.appendChild(stats.domElement);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 4000);
+            camera.position.set(50,50,50);
+            camera.lookAt(new THREE.Vector3());
+
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x888888);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFShadowMap;
+            renderer.autoClear = false;
+
+            document.body.appendChild(renderer.domElement);
+
+            //--------------遊戲區初始化--------------------//
+
+            body = new THREE.Mesh(new THREE.BoxGeometry(40,10,15),new THREE.MeshNormalMaterial());
+            scene.add(new THREE.GridHelper(500,50,'red','white'),body);
+
+
+            //---------------HUD場景初始化-----------------//
+
+            dashboard = new THREE.Scene();
+            var x = window.innerWidth / window.innerHeight;
+            dashboardCamera = new THREE.OrthographicCamera(-10 * x, 10 * x, 10, -10, -10, 1600);
+
+            for(var i = 0; i<= 180; i += 10){
+                text = new THREE_Text.MeshText2D(String(i),{align: THREE_Text.textAlign.center, font: "100px Arial", fillStyle: "#00000"});
+                text.position.copy(new THREE.Vector3(-5,0,0).applyAxisAngle(new THREE.Vector3(0,0,-1),Math.PI / 180 * i).add(new THREE.Vector3(0,-9,0)));
+                text.scale.set(0.005,0.005,0.005);
+                dashboard.add(text);
+            }
+
+            compass = buildCompass();
+            compass.position.set(x * 10 * 4 / 5, 10 * 75 / 100, 0);
+
+            speedLine = buildLine();
+            speedLine.position.y = -9.3;
+
+            dashboardCamera.position.set(0,0,100);
+            dashboard.add(speedLine,compass);
+
+            buildMiniMap();
+            body.add(miniMapCamera);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableKeys = false;
+        }
+
+        function animate() {
+            stats.update();
+            body.position.x += 0.05;
+            compass.rotation.z += 0.05;
+
+            if(speed < 0.0)speedLine.rotation.z = (speed / 180 * Math.PI);
+            else speedLine.rotation.z = -(speed / 180 * Math.PI);
+
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            var ww = window.innerWidth;
+            var hh = window.innerHeight;
+
+            renderer.clear();
+            renderer.setScissorTest(true);
+            renderer.setViewport(0,0,ww,hh);
+            renderer.setScissor(0,0,ww,hh);
+
+            renderer.render(scene,camera);
+            renderer.render(dashboard,dashboardCamera);
+
+            renderer.setViewport(ww * 0.77,hh * 0.70, ww * 0.23, hh * 0.30);
+            renderer.setScissor(ww * 0.77,hh * 0.70, ww * 0.23, hh * 0.30);
+            renderer.clear();
+            renderer.render(miniMapBorder,miniMapBorderCamera);
+            renderer.render(scene,miniMapCamera);
+
+            renderer.setScissorTest(false);
+        }
+
+
+    </script>
+</body>
+</html>
