@@ -9,7 +9,7 @@
     <style>
         #title {
             position: absolute;
-            top: 0px;
+            top: 0;
             width: 100%;
             padding: 10px;
             text-align: center;
@@ -17,14 +17,6 @@
         }
         body {
             overflow: hidden
-        }
-        #speed{
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            padding: 10px;
-            text-align: center;
-            color: yellow;
         }
     </style>
 </head>
@@ -65,10 +57,11 @@
     <!-- //---------------------------THREEJS----------------------------- /-->
 
     <script>
-        var camera, scene, renderer, stats, loader, car, lightAngle = 0.0;
-        var miniMapBorder, miniMapBorderCamera, miniMapCamera, compass, backAlert;
-        var dashboard, dashboardCamera, speedLine;
-        var keyboard = new KeyboardState();
+        let camera, scene, renderer, stats, loader, car, lightAngle = 0.0;
+        let miniMapBorder, miniMapBorderCamera, miniMapCamera, compass, backAlert;
+        let dashboard, dashboardCamera, speedLine, speedText;
+
+        let keyboard = new KeyboardState();
 
         (function () {
             Math.clamp = function (val, min, max) {
@@ -110,7 +103,7 @@
             constructor(){
                 this.speed = 5.0;
                 this.angle = 0.0;
-                this.pos = new THREE.Vector3(0,10,0);
+                this.pos = new THREE.Vector3(250,10,250);
                 this.vel = new THREE.Vector3(this.speed,0,0);
                 this.rearTire = new THREE.Object3D();
                 this.frontTire = new FrontTire();
@@ -168,8 +161,7 @@
                 this.leftRearTire.rotation.z += -this.speed * dt / (2 * Math.PI * 5);
 
                 if(this.speed <= 0.03 && this.speed >= -0.03)this.speed = 0.0;
-                else if(this.speed > 0.03) this.speed -= (1 * this.speed / 180 + 0.03);
-                else this.speed += (1 * this.speed / 180 + 0.03);
+                else this.speed -= (this.speed / 180 + 0.03);
             }
         }
 
@@ -178,6 +170,8 @@
 
         function buildCompass(){
             // 4 / 5
+            var compass = new THREE.Object3D();
+
             var geometry = new THREE.Geometry();
             geometry.vertices.push(
                 new THREE.Vector3(0,Math.sqrt(3),0),
@@ -185,6 +179,9 @@
                 new THREE.Vector3(1,0,0),
                 new THREE.Vector3(0,-Math.sqrt(3),0)
             );
+            text = new THREE_Text.MeshText2D('S',{align: THREE_Text.textAlign.center, font: "100px Arial", fillStyle: "#ff0000"});
+            text.scale.set(0.02,0.02,0.02);
+            text.position.y = 4;
 
             var face = new THREE.Face3(0,1,2);
             face.materialIndex = 0;
@@ -199,7 +196,8 @@
 
             var matArray = [];
             matArray.push(new THREE.MeshBasicMaterial({color: 0xff0000}),new THREE.MeshBasicMaterial({color: 0xffffff}));
-            return new THREE.Mesh(geometry,matArray);
+            compass.add(new THREE.Mesh(geometry,matArray),text);
+            return compass;
         }
 
         function buildLine() {
@@ -214,10 +212,10 @@
             miniMapBorderCamera = new THREE.OrthographicCamera(-10.1, 10.1, 10.1, -10.1, -50, 50);
             miniMapBorderCamera.position.z = 20;
 
-            miniMapCamera = new THREE.OrthographicCamera(-60,60,60,-60,0,100);
+            miniMapCamera = new THREE.OrthographicCamera(-500,500,500,-500,0,100);
             miniMapCamera.up.set(0,0,-1);
-            miniMapCamera.position.y = 90;
-            miniMapCamera.lookAt(new THREE.Vector3());
+            miniMapCamera.position.set(500,90,500);
+            miniMapCamera.lookAt(new THREE.Vector3(500,-1,500));
 
 
             var lineGeo = new THREE.Geometry();
@@ -350,6 +348,9 @@
                 text.scale.set(0.005,0.005,0.005);
                 dashboard.add(text);
             }
+            speedText = new THREE_Text.MeshText2D("5.0 Km/Hr",{align: THREE_Text.textAlign.center, font: "100px Arial", fillStyle: "#ffff00"});
+            speedText.position.set(0,-5,0);
+            speedText.scale.set(0.005,0.005,0.005);
 
             backAlert = new THREE_Text.MeshText2D('R',{align: THREE_Text.textAlign.center, font: "100px Arial", fillStyle: "#ff0000"});
             backAlert.scale.set(0.02,0.02,0.02);
@@ -357,23 +358,23 @@
             backAlert.visible = false;
 
             compass = buildCompass();
-            compass.position.set(x * 10 * 4 / 5, 10 * 75 / 100, 0);
+            compass.position.set(x * 10 * 4 / 5, 10 * 50 / 100, 0);
 
             speedLine = buildLine();
             speedLine.position.y = -9.3;
 
             dashboardCamera.position.set(0,0,100);
-            dashboard.add(speedLine,compass,backAlert);
+            dashboard.add(speedLine,compass,backAlert,speedText);
 
             buildMiniMap();
-            car.body.add(miniMapCamera);
         }
 
         function animate() {
             stats.update();
 
-            lightAngle += 0.005;
-            lightAngle %= Math.PI;
+            /*lightAngle += 0.005;
+            lightAngle %= Math.PI;*/
+            lightAngle = Math.PI / 4;
             light.position.copy(new THREE.Vector3(2000,0,0).applyAxisAngle(new THREE.Vector3(0,0,1),lightAngle));
             light.position.x += car.body.position.x;
             light.position.z = car.body.position.z;
@@ -387,6 +388,7 @@
                 backAlert.visible = false;
                 speedLine.rotation.z = -(car.speed / 180 * Math.PI);
             }
+            speedText.text = String(car.speed.toFixed(1)) + ' Km/Hr';
 
             var dt = clock.getDelta();
             car.update(dt);
