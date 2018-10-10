@@ -363,9 +363,9 @@
             renderer.shadowMap.type = THREE.PCFShadowMap;
             renderer.autoClear = false;
 
-            document.addEventListener('mousedown', hudButtonPick, false);
-            document.addEventListener('mouseup', hudButtonUp, false);
-            document.addEventListener('mousemove', hudButtonMove, false);
+            document.addEventListener('touchstart', hudButtonPickMobile, false);
+            document.addEventListener('touchend', hudButtonUpMobile, false);
+            document.addEventListener('touchmove', hudButtonMoveMobile, false);
 
 
             light = new THREE.DirectionalLight(0x666666);
@@ -454,9 +454,10 @@
             car.body.add(miniMapCamera);
         }
 
-        function hudButtonPick(event) {
-            let ndcX = (event.clientX / window.innerWidth) * 2 - 1;
-            let ndcY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        function hudButtonPickMobile(event) {
+            let ndcX = (event.changedTouches[0].clientX / window.innerWidth) * 2 - 1;
+            let ndcY = -(event.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
 
             let halfW = dashboardCamera.right;
             let halfH = dashboardCamera.top;
@@ -469,21 +470,20 @@
                 ControlPick = new THREE.Mesh(new THREE.RingGeometry(0.8,1,30),new THREE.MeshBasicMaterial({color: 0x00ff00}));
                 ControlPick.position.set(mouse.x,mouse.y,0);
                 dashboard.add(ControlPick);
-                console.log('down');
             }
         }
 
-        function hudButtonUp(event) {
+        function hudButtonUpMobile(event) {
             if(ControlPick !== undefined){
                 dashboard.remove(ControlPick);
                 ControlPick = undefined;
             }
         }
 
-        function hudButtonMove(event){
+        function hudButtonMoveMobile(event) {
             if(ControlPick !== undefined){
-                let ndcX = (event.clientX / window.innerWidth) * 2 - 1;
-                let ndcY = -(event.clientY / window.innerHeight) * 2 + 1;
+                let ndcX = (event.changedTouches[0].clientX / window.innerWidth) * 2 - 1;
+                let ndcY = -(event.changedTouches[0].clientY / window.innerHeight) * 2 + 1;
 
                 let halfW = dashboardCamera.right;
                 let halfH = dashboardCamera.top;
