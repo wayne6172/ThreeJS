@@ -21,7 +21,7 @@
     </style>
 </head>
 <body>
-    <div id="title">Game Homework2 Demo</div>
+<div id="title">Game Homework2 Demo<br><button onclick="changeCamera()">Change Camera</button></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/96/three.min.js"></script>
     <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
@@ -57,7 +57,7 @@
     <!-- //---------------------------THREEJS----------------------------- /-->
 
     <script>
-        let camera, scene, renderer, stats, loader, car, lightAngle = 0.0;
+        let camera, scene, renderer, stats, loader, car, lightAngle = 0.0, cameraMode = 0;
         let miniMapBorder, miniMapBorderCamera, miniMapTopCamera, compass, backAlert, ControlRange, ControlPick;
         let dashboard, dashboardCamera, speedLine, speedText, miniMapBackCamera, miniMapCamera;
         let map, mapDetail = [
@@ -94,7 +94,11 @@
             {position: new THREE.Vector3(50,0,-1205), width: 8.0, rotation: 0},
         ];
         let buildingDetal = [
-            {name: 0, position: new THREE.Vector3(), rotation: 0, length: 50, width: 50, height: 20}
+            {name: 0, position: new THREE.Vector3(-1200,160,-150), rotation: 0, length: 150, width: 650, height: 320},
+            {name: 1, position: new THREE.Vector3(-25,140,-200), rotation: 0, length: 520, width: 150, height: 280},
+            {name: 2, position: new THREE.Vector3(-170,110,-500), rotation: 0, length: 350, width: 150, height: 220},
+            {name: 3, position: new THREE.Vector3(900,60,100), rotation: 0, length: 200, width: 200, height: 120},
+            {name: 4, position: new THREE.Vector3(150,60,100), rotation: 0, length: 200, width: 200, height: 120},
         ];
 
         let keyboard = new KeyboardState();
@@ -149,7 +153,7 @@
                 this.rearTire.add(this.leftRearTire,this.rightRearTire);
                 this.rearTire.position.set(-12,-5,0);
 
-                var box = new THREE.Mesh(new THREE.BoxGeometry(40,10,15),new THREE.MeshPhongMaterial({color: 0x0000cc}));
+                var box = new THREE.Mesh(buildCarBodyGeometry(),new THREE.MeshBasicMaterial({color: 0x0000cc}));
                 box.castShadow = true;
                 this.body.add(this.rearTire,box,this.frontTire.tire);
                 this.body.position.copy(this.pos);
@@ -208,6 +212,51 @@
         init();
         animate();
 
+        function changeCamera() {
+            cameraMode++;
+            cameraMode %= 4;
+            switch (cameraMode) {
+                case 0:
+                    camera.position.set(-50,15,0);
+                    break;
+                case 1:
+                    camera.position.set(-50,15,50);
+                    break;
+                case 2:
+                    camera.position.set(50,15,0);
+                    break;
+                case 3:
+                    camera.position.set(-50,15,-50);
+                    break;
+            }
+            camera.lookAt(car.body.position.clone(camera.position));
+        }
+
+        function buildCarBodyGeometry() {
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(
+                new THREE.Vector3(-7,5,0),
+                new THREE.Vector3(-12,-5,-7.5),
+                new THREE.Vector3(-12,-5,7.5),
+                new THREE.Vector3(12,-5,0)
+            );
+
+            var face = new THREE.Face3(0,1,2);
+            geometry.faces.push(face);
+            face = new THREE.Face3(0,3,1);
+            geometry.faces.push(face);
+            face = new THREE.Face3(0,2,3);
+            geometry.faces.push(face);
+            face = new THREE.Face3(1,3,2);
+            geometry.faces.push(face);
+
+            geometry.computeBoundingSphere();
+            geometry.computeFaceNormals();
+            geometry.computeVertexNormals();
+
+            return geometry;
+        }
+
         function buildRoad(){
             var map = new THREE.Object3D(),road;
             var roadTexture = loader.load('../texture/Road.jpg');
@@ -235,6 +284,15 @@
             map.add(road);
 
             return map;
+        }
+
+        function buildBuilding() {
+            for(var i = 0; i < buildingDetal.length; i++){
+                let build = new THREE.Mesh(new THREE.BoxGeometry(buildingDetal[i].length,buildingDetal[i].height,buildingDetal[i].width),
+                    new THREE.MeshBasicMaterial({map: loader.load('../texture/Hw2/' + String(i) + '.jpg')}));
+                build.position.copy(buildingDetal[i].position);
+                scene.add(build);
+            }
         }
 
         function buildCompass(){
@@ -270,10 +328,19 @@
         }
 
         function buildLine() {
-            var lineGeo = new THREE.Geometry();
-            lineGeo.vertices.push(new THREE.Vector3(0,0,0),new THREE.Vector3(-4.5,0,0));
+            var Geo = new THREE.Geometry();
+            Geo.vertices.push(new THREE.Vector3(0,0,0),new THREE.Vector3(-4.5,0,0),new THREE.Vector3(0,-0.1,0),new THREE.Vector3(0,0.1,0));
 
-            return new THREE.Line(lineGeo, new THREE.LineBasicMaterial({color: 0xff0000,depthTest: false}));
+            var face = new THREE.Face3(0,1,2);
+            Geo.faces.push(face);
+            face = new THREE.Face3(0,3,1);
+            Geo.faces.push(face);
+
+            Geo.computeBoundingSphere();
+            Geo.computeFaceNormals();
+            Geo.computeVertexNormals();
+
+            return new THREE.Mesh(Geo, new THREE.LineBasicMaterial({color: 0xff0000,depthTest: false}));
         }
 
         function buildMiniMap() {
@@ -281,9 +348,9 @@
             miniMapBorderCamera = new THREE.OrthographicCamera(-10.1, 10.1, 10.1, -10.1, 1, 50);
             miniMapBorderCamera.position.z = 20;
 
-            miniMapTopCamera = new THREE.OrthographicCamera(-450,450,450,-450,0,150);
+            miniMapTopCamera = new THREE.OrthographicCamera(-450,450,450,-450,1,450);
             miniMapTopCamera.up.set(1,0,0);
-            miniMapTopCamera.position.set(300,90,0);
+            miniMapTopCamera.position.set(300,390,0);
             miniMapTopCamera.lookAt(new THREE.Vector3(300,0,0));
 
             miniMapBackCamera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 1, 300);
@@ -359,7 +426,7 @@
             document.body.appendChild(stats.domElement);
 
             camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 4000);
-            camera.position.set(-50,20,0);
+            camera.position.set(-50,15,0);
             camera.lookAt(new THREE.Vector3());
             scene.add(camera);
 
@@ -468,6 +535,7 @@
             dashboard.add(speedLine,compass,backAlert,speedText, ControlRange);
 
             buildMiniMap();
+            buildBuilding();
             car.body.add(miniMapTopCamera,miniMapBackCamera);
         }
 

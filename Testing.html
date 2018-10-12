@@ -50,6 +50,13 @@
             {position: new THREE.Vector3(-470,0,-500), width: 3.0, rotation: Math.PI / 180 * 76.5},
             {position: new THREE.Vector3(50,0,-1205), width: 8.0, rotation: 0},
         ];
+        let buildingDetal = [
+            {name: 0, position: new THREE.Vector3(-1200,160,-150), rotation: 0, length: 150, width: 650, height: 320},
+            {name: 1, position: new THREE.Vector3(-25,140,-200), rotation: 0, length: 520, width: 150, height: 280},
+            {name: 2, position: new THREE.Vector3(-170,110,-500), rotation: 0, length: 350, width: 150, height: 220},
+            {name: 3, position: new THREE.Vector3(900,60,100), rotation: 0, length: 200, width: 200, height: 120},
+            {name: 4, position: new THREE.Vector3(150,60,100), rotation: 0, length: 200, width: 200, height: 120},
+        ];
 
         init();
         animate();
@@ -81,6 +88,15 @@
             map.add(road);
 
             return map;
+        }
+
+        function buildBuilding() {
+            for(var i = 0; i < buildingDetal.length; i++){
+                let build = new THREE.Mesh(new THREE.BoxGeometry(buildingDetal[i].length,buildingDetal[i].height,buildingDetal[i].width),
+                    new THREE.MeshBasicMaterial({map: loader.load('texture/Hw2/' + String(i) + '.jpg')}));
+                build.position.copy(buildingDetal[i].position);
+                scene.add(build);
+            }
         }
 
         function init() {
@@ -119,6 +135,7 @@
             googleMap.position.y = -0.2;
 
             map = buildRoad();
+            buildBuilding();
             scene.add(googleMap,map);
         }
 
