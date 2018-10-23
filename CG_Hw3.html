@@ -23,6 +23,26 @@
     <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
     <script>
+        var renderer, camera, control, scene, clock;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            clock = new THREE.Clock();
+
+        }
+
+        function animate() {
+
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+
+        }
 
     </script>
 </body>
