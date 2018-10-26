@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game_Hw3 Demo</title>
+    <style>
+        #info {
+            position: absolute;
+            top: 0px; width: 100%;
+            font-family: Monospace;
+            font-size: 20px;
+            padding: 5px;
+            text-align: center;
+            color: #003333
+        }
+    </style>
+</head>
+<body>
+    <audio id="collisionsound" style="display:none">
+        <source src="../sound/hiccup.mp3" type='audio/mp3'>
+    </audio>
+    <audio id="soundtrack" autoplay loop style="display:none">
+        <source src="../sound/The_Closing_Of_Summer.mp3" type='audio/mp3'>
+    </audio>
+    <div id="info">
+        滑鼠點擊平面即可產生圓盤<br>
+        音樂：<button id="play" style="width:20%">Play</button>
+    </div>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/96/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+    <script>
+        $('#play').click ( function() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                $('#play').text ('Play')
+                soundTrack.pause()
+            } else {
+                $('#play').text ('Pause')
+                soundTrack.play()
+            }
+        });
+
+        var camera, scene, renderer, controls, stats, clock;
+        var isPaused = true;
+        var raycaster = new THREE.Raycaster(),mouse = new THREE.Vector2(),wallLength = 200, ballRadius = 5,angle = 0.0;
+        var allBall = [],allWall = [], pickables = [];
+
+        var collisionsound = document.getElementById('collisionsound');
+        var soundTrack = document.getElementById('soundtrack');
+
+        class Ball{
+            constructor(point,rad,color){
+                this.pos = point.clone();
+                this.pos.y = 2;
+                this.vel = new THREE.Vector3(0,0,-55);
+                this.mesh = this.buildBall(rad, this.pos.y * 2);
+                this.radius = rad;
+                this.light = new THREE.PointLight(color,1,50);
+                this.mesh.material.color.copy(color.clone());
+
+                this.mesh.position.copy(this.pos);
+                this.light.position.copy(this.pos);
+                this.light.position.y += 20;
+
+                scene.add(this.light,this.mesh);
+            }
+
+            update(dt){
+                this.collidingWalls();
+                this.pos.add(this.vel.clone().multiplyScalar(dt));
+
+                this.mesh.position.copy(this.pos);
+                this.light.position.copy(this.pos);
+                this.light.position.y += 20;
+            }
+
+            collidingWalls(){
+                const CR = 1.0;
+                for(let i = 0; i < allWall.length; i++) {
+                    let hit = this.check_Intersect(allWall[i]);
+                    if (hit !== 0) {
+                        //速度修正
+
+                        let n,p,pt,n1,n2;
+
+                        if(hit === 3 || hit === 6){
+                            n = allWall[i].normal36.clone();
+                            if(hit === 6)n.multiplyScalar(-1);
+
+                            p = n.clone().multiplyScalar(5 + allWall[i].width / 2);
+                            pt = this.pos.clone().sub(n.clone().multiplyScalar(this.pos.clone().sub(allWall[i].pos).dot(n)));
+                            this.pos = pt.clone().add(p);
+                            this.vel.sub(n.multiplyScalar((1+CR) * (this.vel.dot(n))));
+                        }
+                        else if(hit === 7 || hit === 8) {
+                            n = allWall[i].normal78.clone();
+                            if(hit === 8)n.multiplyScalar(-1);
+
+                            p = n.clone().multiplyScalar(5 + allWall[i].depth / 2);
+                            pt = this.pos.clone().sub(n.clone().multiplyScalar(this.pos.clone().sub(allWall[i].pos).dot(n)));
+                            this.pos = pt.clone().add(p);
+                            this.vel.sub(n.multiplyScalar((1+CR) * (this.vel.dot(n))));
+                        }
+                        else {
+                            n1 = allWall[i].normal36.clone();
+                            n2 = allWall[i].normal78.clone();
+
+                            if(hit === 5 || hit === 4)n1.multiplyScalar(-1);
+                            if(hit === 2 || hit === 5)n2.multiplyScalar(-1);
+
+                            let dot = n1.clone().multiplyScalar(allWall[i].width / 2).add(n2.clone().multiplyScalar(allWall[i].depth / 2)).add(allWall[i].pos);
+                            let delta = this.pos.clone().sub(dot);
+                            delta.normalize().multiplyScalar(5).add(dot);
+                            delta.y = this.pos.y;
+
+                            this.pos.copy(delta);
+                            n = n1.clone().add(n2).normalize();
+                            this.vel.sub(n.multiplyScalar((1+CR) * (this.vel.dot(n))));
+                        }
+
+                    }
+                }
+            }
+
+            collidingBalls(ball){
+                if (this.pos.distanceTo(ball.pos) < 5.0 + 5.0) {
+                    collisionsound.play();
+                    //--------------位置修正---------------//
+
+                    var delta = this.pos.clone().sub(ball.pos);
+                    var d = delta.length();
+                    var diff = (d - 10.0) / d;
+
+                    delta.multiplyScalar(0.5 * diff);
+
+                    this.pos.sub(delta);
+                    ball.pos.add(delta);
+
+                    //-----------------速度修正-----------------
+
+                    let nextV1 = new THREE.Vector3().copy(this.vel);
+                    let nextV2 = new THREE.Vector3().copy(ball.vel);
+
+                    let X1_Sub_X2 = this.pos.clone().sub(ball.pos);
+                    let X2_Sub_X1 = X1_Sub_X2.clone().multiplyScalar(-1);
+                    nextV1.sub(X1_Sub_X2.multiplyScalar(this.vel.clone().sub(ball.vel).dot(X1_Sub_X2) / X1_Sub_X2.lengthSq()));
+                    nextV2.sub(X2_Sub_X1.multiplyScalar(ball.vel.clone().sub(this.vel).dot(X2_Sub_X1) / X2_Sub_X1.lengthSq()));
+
+                    this.vel.copy(nextV1);
+                    ball.vel.copy(nextV2);
+                }
+            }
+
+            buildBall(rad,height){
+                let body = new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,height,64),new THREE.MeshBasicMaterial());
+                return body;
+            }
+
+            check_Intersect(rec){
+                let circle2D = new THREE.Vector3(this.pos.x,0,this.pos.z);
+                let rectangle2D = new THREE.Vector3(rec.pos.x,0,rec.pos.z);
+
+                let Rmax = new THREE.Vector3(rec.width / 2,0,rec.depth / 2);
+                let Rmin = new THREE.Vector3(-rec.width / 2,0,-rec.depth / 2);
+                let normalMat = new THREE.Matrix3().getNormalMatrix(rec.mesh.matrixWorld);
+                let xR = new THREE.Vector3(1,0,0).applyMatrix3(normalMat).normalize();
+                let yR = new THREE.Vector3(0,0,1).applyMatrix3(normalMat).normalize();
+
+                let newCircle2D = new THREE.Vector3(
+                    circle2D.clone().sub(rectangle2D).dot(xR),
+                    0,
+                    circle2D.clone().sub(rectangle2D).dot(yR)
+                );
+
+                Rmax.sub(newCircle2D);
+                Rmin.sub(newCircle2D);
+
+                if(Rmax.x < 0){
+                    if(Rmax.z < 0){
+                        if((Rmax.x * Rmax.x + Rmax.z * Rmax.z) < 25)return 1;
+                        else return 0;
+                    }
+                    else if(Rmin.z > 0){
+                        if((Rmax.x * Rmax.x + Rmin.z * Rmin.z) < 25)return 2;
+                        else return 0;
+                    }
+                    else {
+                        if(Math.abs(Rmax.x) < 5)return 3;
+                        else return 0;
+                    }
+                }
+                else if(Rmin.x > 0){
+                    if(Rmax.z < 0){
+                        if((Rmin.x * Rmin.x + Rmax.z * Rmax.z) < 25)return 4;
+                        else return 0;
+                    }
+                    else if(Rmin.z > 0){
+                        if((Rmin.x * Rmin.x + Rmin.z * Rmin.z) < 25)return 5;
+                        else return 0;
+                    }
+                    else {
+                        if(Rmin.x < 5)return 6;
+                        else return 0;
+                    }
+                }
+                else {
+                    if(Rmax.z < 0){
+                        if(-Rmax.z < 5)return 7;
+                        else return 0;
+                    }
+                    else if(Rmin.z > 0){
+                        if(Rmin.z < 5)return 8;
+                        else return 0;
+                    }
+                    else return 9;
+                }
+            }
+        }
+
+        class Wall{
+            constructor(width,height,depth,pos,rotate) {
+                this.pos = pos.clone();
+                this.width = width;
+                this.height = height;
+                this.depth = depth;
+                this.rotate = rotate;
+                this.localNormal78 = new THREE.Vector3(0,0,1);
+                this.localNormal36 = new THREE.Vector3(1,0,0);
+                this.mesh = new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),new THREE.MeshPhongMaterial({color: 0x444444, transparent: true, opacity: 0.5}));
+                this.mesh.position.copy(this.pos);
+                this.mesh.rotation.y = rotate;
+
+                scene.add(this.mesh);
+            }
+            update(){
+                //this.rotate += 0.01;
+                this.mesh.rotation.y = this.rotate;
+
+                this.mesh.updateMatrixWorld();
+                let normalMat = new THREE.Matrix3().getNormalMatrix(this.mesh.matrixWorld);
+                this.normal36 = this.localNormal36.clone().applyMatrix3(normalMat).normalize();
+                this.normal78 = this.localNormal78.clone().applyMatrix3(normalMat).normalize();
+            }
+        }
+
+        init();
+        animate();
+
+        function init() {
+            document.addEventListener('mousedown', onDocumentMouseDown, false);
+
+            scene = new THREE.Scene();
+            clock = new THREE.Clock();
+            stats = new Stats();
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.top = '0px';
+            stats.domElement.style.zIndex = 100;
+            document.body.appendChild(stats.domElement);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0xffffff);
+            document.body.appendChild(renderer.domElement);
+
+            camera = new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,1,5000);
+            camera.position.set(0,150,250);
+
+            light = new THREE.AmbientLight(0x888888);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableKeys = false;
+
+            var plane = new THREE.Mesh(new THREE.PlaneGeometry(wallLength, wallLength), new THREE.MeshBasicMaterial({
+                transparent: true,
+                opacity: 0.0,
+                //visible: true
+            }));
+            pickables.push(plane);
+            plane.rotation.x = -Math.PI / 2;
+
+            var ground = new THREE.Mesh(new THREE.BoxGeometry(wallLength,10,wallLength), new THREE.MeshPhongMaterial({color: 0x888888}));
+            ground.position.y = -5;
+
+            allWall.push(new Wall(10,40,wallLength,new THREE.Vector3(wallLength / 2,20,0),0));
+            allWall.push(new Wall(10,40,wallLength,new THREE.Vector3(-wallLength / 2,20,0),0));
+            allWall.push(new Wall(wallLength,40,10,new THREE.Vector3(0,20,wallLength / 2),0));
+            allWall.push(new Wall(wallLength,40,10,new THREE.Vector3(0,20,-wallLength / 2),0));
+            allWall.push(new Wall(100,40,10,new THREE.Vector3(30,0,0),0));
+            allWall.push(new Wall(10,40,100,new THREE.Vector3(-30,0,0),0));
+
+
+            scene.add(plane,ground,light);
+        }
+
+        function animate() {
+            controls.update();
+            stats.update();
+
+            let dt = clock.getDelta();
+
+            allWall.forEach(i => i.update());
+
+            allBall.forEach(function (i) {
+                i.update(dt);
+            });
+            angle += 0.01;
+            for(let i = 0;i < allWall.length;i++){
+                if(i > 3){
+                    allWall[i].rotate = angle;
+                }
+                allWall[i].update();
+            }
+            
+            for(let i = 0;i < allBall.length;i++){
+                for(let j = i + 1;j < allBall.length;j++){
+                    allBall[i].collidingBalls(allBall[j]);
+                }
+            }
+
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            renderer.render(scene,camera);
+        }
+
+        function onDocumentMouseDown(event) {
+            event.preventDefault();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            var intersects = raycaster.intersectObjects(pickables);
+            if (intersects.length > 0) {
+                let color = "hsl(" + Math.random() * 360 + ", 100%, 50%)";
+                allBall.push(new Ball(intersects[0].point,ballRadius,new THREE.Color(color)));
+            }
+        }
+    </script>
+</body>
+</html>
