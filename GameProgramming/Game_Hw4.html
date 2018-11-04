@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game_Hw4 Demo</title>
+    <style>
+        #info {
+            position: absolute;
+            top: 0px; width: 100%;
+            font-family: Monospace;
+            font-size: 20px;
+            padding: 5px;
+            text-align: center;
+            color: #ffff00;
+        }
+        #guiContainer {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        歌長度約30sec，旁邊Dat GUI只能在Pause狀態下操作<br>
+        <button id="play" style="width:20%">Play</button>
+    </div>
+    <div id="guiContainer"></div>
+    <audio id="soundtrack" autoplay loop style="display:none">
+        <source src="../sound/GHw4.mp3" type='audio/mp3'>
+    </audio>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/96/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+
+    <script>
+        var camera, scene, renderer, controls, stats, clock, people, gui, sound, isPaused = true, t = 0;
+        var gControl, steps, BPM = 142, keys = [], dance;
+
+
+        $('#play').click ( function() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                $('#play').text ('Play');
+                clock.stop();
+                sound.pause();
+            } else {
+                $('#play').text ('Pause');
+                clock.start();
+                sound.play();
+            }
+        });
+
+        class People{
+            constructor() {
+                this.people = new THREE.Object3D();
+                this.body = new THREE.Object3D();
+                this.body.position.set(0,35,0);
+
+                this.body.add(new THREE.Mesh(new THREE.BoxGeometry(15,30,7),new THREE.MeshNormalMaterial()));
+
+                this.head = new THREE.Mesh(new THREE.BoxGeometry(30,20,7),new THREE.MeshNormalMaterial());
+                this.head.position.set(0,25,0);
+
+                this.rightLeg = new THREE.Object3D();
+                this.rightLeg.position.set(-4.5,-17,0);
+
+                let rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(6,20,7),new THREE.MeshNormalMaterial());
+                rightLegMesh.position.set(0,-8,0);
+                this.rightLeg.add(rightLegMesh);
+
+
+                this.leftLeg = new THREE.Object3D();
+                this.leftLeg.position.set(4.5,-17,0);
+
+                let leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(6,20,7),new THREE.MeshNormalMaterial());
+                leftLegMesh.position.set(0,-8,0);
+                this.leftLeg.add(leftLegMesh);
+
+                this.leftHand = new THREE.Object3D();
+                this.leftHand.position.set(10,8,0);
+
+                let leftHandMesh = new THREE.Mesh(new THREE.BoxGeometry(5,25,7),new THREE.MeshNormalMaterial());
+                leftHandMesh.position.set(0,-10.5,0);
+                this.leftHand.add(leftHandMesh);
+
+                this.rightHand = new THREE.Object3D();
+                this.rightHand.position.set(-10,8,0);
+
+                let rightHandMesh = new THREE.Mesh(new THREE.BoxGeometry(5,25,7),new THREE.MeshNormalMaterial());
+                rightHandMesh.position.set(0,-10.5,0);
+                this.rightHand.add(rightHandMesh);
+
+
+                this.body.add(this.head,this.rightLeg,this.leftLeg,this.leftHand,this.rightHand);
+                this.people.add(this.body);
+
+
+                scene.add(this.people);
+            }
+        }
+
+        init();
+        animate();
+
+        function init() {
+            sound = document.getElementById("soundtrack");
+            sound.volume = 0.1;
+            scene = new THREE.Scene();
+            clock = new THREE.Clock();
+            stats = new Stats();
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.top = '0px';
+            stats.domElement.style.zIndex = 100;
+            document.body.appendChild(stats.domElement);
+
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x888888);
+            document.body.appendChild(renderer.domElement);
+
+            camera = new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,1,5000);
+            camera.position.set(0,150,250);
+
+            scene.add(new THREE.GridHelper(500,50,'red','white'));
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableKeys = false;
+
+            people = new People();
+
+            buildDance = function(){
+                this.bodyRotate = 0.001;
+                this.bodyHeight = 0.001;
+                this.rightHandX =  0.001;
+                this.rightHandZ = 0.001;
+                this.leftHandX = 0.001;
+                this.leftHandZ = 0.001;
+                this.rightLegX = 0.001;
+                this.rightLegZ = 0.001;
+                this.leftLegX = 0.001;
+                this.leftLegZ = 0.001;
+            };
+            
+            gControl = new buildDance();
+            dance = new buildDance();
+
+            gui = new dat.GUI({load: loadJSON(), preset: 'Default'});
+            gui.remember(gControl);
+            gui.add(gControl,'bodyRotate',0,Math.PI * 2);
+            gui.add(gControl,'bodyHeight',0.0,25.0);
+            gui.add(gControl,'rightHandX',-Math.PI * 2 / 3,Math.PI * 2 / 3);
+            gui.add(gControl,'rightHandZ',-Math.PI * 2 / 3,0);
+            gui.add(gControl,'leftHandX',-Math.PI * 2 / 3,Math.PI * 2 / 3);
+            gui.add(gControl,'leftHandZ',0,Math.PI * 2 / 3);
+            gui.add(gControl,'rightLegX',-Math.PI / 2,Math.PI / 2);
+            gui.add(gControl,'rightLegZ',-Math.PI / 2,Math.PI / 2);
+            gui.add(gControl,'leftLegX',-Math.PI / 2,Math.PI / 2);
+            gui.add(gControl,'leftLegZ',-Math.PI / 2,Math.PI / 2);
+
+            let step = loadJSON();
+            steps = [step.remembered.Step0["0"],step.remembered.Step1["0"],step.remembered.Step2["0"],
+                step.remembered.Step3["0"],step.remembered.Step4["0"],step.remembered.Step5["0"],step.remembered.Step6["0"]];
+
+            keys[0] = 0.0;
+            keys[1] = 1 / 8;
+            keys[2] = 2 / 8;
+            keys[3] = 3 / 8;
+            keys[4] = 4 / 8;
+            keys[5] = 6 / 8;
+            keys[6] = 1.0;
+        }
+
+        function animate() {
+            stats.update();
+
+
+            if(isPaused) {
+                people.people.rotation.y = gControl.bodyRotate;
+                people.people.position.y = gControl.bodyHeight;
+                people.leftLeg.rotation.x = gControl.leftLegX;
+                people.leftLeg.rotation.z = gControl.leftLegZ;
+                people.rightLeg.rotation.x = gControl.rightLegX;
+                people.rightLeg.rotation.z = gControl.rightLegZ;
+                people.leftHand.rotation.x = gControl.leftHandX;
+                people.leftHand.rotation.z = gControl.leftHandZ;
+                people.rightHand.rotation.x = gControl.rightHandX;
+                people.rightHand.rotation.z = gControl.rightHandZ;
+            }
+            else {
+                t += clock.getDelta();
+                t %= 30.6;
+                keyframe(t);
+
+                people.people.rotation.y = dance.bodyRotate;
+                people.people.position.y = dance.bodyHeight;
+                people.leftLeg.rotation.x = dance.leftLegX;
+                people.leftLeg.rotation.z = dance.leftLegZ;
+                people.rightLeg.rotation.x = dance.rightLegX;
+                people.rightLeg.rotation.z = dance.rightLegZ;
+                people.leftHand.rotation.x = dance.leftHandX;
+                people.leftHand.rotation.z = dance.leftHandZ;
+                people.rightHand.rotation.x = dance.rightHandX;
+                people.rightHand.rotation.z = dance.rightHandZ;
+            }
+
+
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            renderer.render(scene,camera);
+        }
+
+        function keyframe(t) {
+            if(t >= 1.341 && t <= 30.0){
+                var s = ((t - 1.341) % (60 / BPM * 8)) / (60 / BPM * 8);
+
+                for(var i = 1; i < keys.length; i++){
+                    if(keys[i] > s)break;
+                }
+
+                console.log(i);
+
+                var ii = i - 1;
+                if(i === 6)i = 0;
+
+                var a = (s - keys[ii]) / (keys[ii+1] - keys[ii]);
+
+                dance.bodyRotate = steps[ii].bodyRotate * (1 - a) + steps[ii + 1].bodyRotate * a;
+                dance.bodyHeight = steps[ii].bodyHeight * (1 - a) + steps[ii + 1].bodyHeight * a;
+                dance.rightHandX = steps[ii].rightHandX * (1 - a) + steps[ii + 1].rightHandX * a;
+                dance.rightHandZ = steps[ii].rightHandZ * (1 - a) + steps[ii + 1].rightHandZ * a;
+                dance.leftHandX = steps[ii].leftHandX * (1 - a) + steps[ii + 1].leftHandX * a;
+                dance.leftHandZ = steps[ii].leftHandZ * (1 - a) + steps[ii + 1].leftHandZ * a;
+                dance.rightLegX = steps[ii].rightLegX * (1 - a) + steps[ii + 1].rightLegX * a;
+                dance.rightLegZ = steps[ii].rightLegZ * (1 - a) + steps[ii + 1].rightLegZ * a;
+                dance.leftLegX = steps[ii].leftLegX * (1 - a) + steps[ii + 1].leftLegX * a;
+                dance.leftLegZ = steps[ii].leftLegZ * (1 - a) + steps[ii + 1].leftLegZ * a;
+            }
+        }
+
+        function loadJSON() {
+            return {
+                "preset": "Step6",
+                "remembered": {
+                    "Default": {
+                        "0": {
+                            "bodyRotate": 0.001,
+                            "bodyHeight": 0.001,
+                            "rightHandX": 0.001,
+                            "rightHandZ": 0.001,
+                            "leftHandX": 0.001,
+                            "leftHandZ": 0.001,
+                            "rightLegX": 0.001,
+                            "rightLegZ": 0.001,
+                            "leftLegX": 0.001,
+                            "leftLegZ": 0.001
+                        }
+                    },
+                    "Step0": {
+                        "0": {
+                            "bodyRotate": 0,
+                            "bodyHeight": 0,
+                            "rightHandX": 0,
+                            "rightHandZ": 0,
+                            "leftHandX": 0,
+                            "leftHandZ": 0,
+                            "rightLegX": 0,
+                            "rightLegZ": 0,
+                            "leftLegX": 0,
+                            "leftLegZ": 0
+                        }
+                    },
+                    "Step1": {
+                        "0": {
+                            "bodyRotate": 0,
+                            "bodyHeight": 0,
+                            "rightHandX": -1.5496039510059316,
+                            "rightHandZ": 0,
+                            "leftHandX": 0.5387621293119125,
+                            "leftHandZ": 0,
+                            "rightLegX": 0,
+                            "rightLegZ": 0,
+                            "leftLegX": -0.787659046675705,
+                            "leftLegZ": 0
+                        }
+                    },
+                    "Step2": {
+                        "0": {
+                            "bodyRotate": 0,
+                            "bodyHeight": 0,
+                            "rightHandX": 0,
+                            "rightHandZ": 0,
+                            "leftHandX": 0,
+                            "leftHandZ": 0,
+                            "rightLegX": 0,
+                            "rightLegZ": 0,
+                            "leftLegX": 0,
+                            "leftLegZ": 0
+                        }
+                    },
+                    "Step3": {
+                        "0": {
+                            "bodyRotate": 0,
+                            "bodyHeight": 0,
+                            "rightHandX": 0.5388,
+                            "rightHandZ": 0,
+                            "leftHandX": -1.5496,
+                            "leftHandZ": 0,
+                            "rightLegX": -0.7877,
+                            "rightLegZ": 0,
+                            "leftLegX": 0,
+                            "leftLegZ": 0
+                        }
+                    },
+                    "Step4": {
+                        "0": {
+                            "bodyRotate": 0,
+                            "bodyHeight": 0,
+                            "rightHandX": 0,
+                            "rightHandZ": 0,
+                            "leftHandX": 0,
+                            "leftHandZ": 0,
+                            "rightLegX": 0,
+                            "rightLegZ": 0,
+                            "leftLegX": 0,
+                            "leftLegZ": 0
+                        }
+                    },
+                    "Step5": {
+                        "0": {
+                            "bodyRotate": 3.1415,
+                            "bodyHeight": 25,
+                            "rightHandX": 0,
+                            "rightHandZ": 0,
+                            "leftHandX": -1.5496,
+                            "leftHandZ": 0,
+                            "rightLegX": -1.5707963267948966,
+                            "rightLegZ": 0,
+                            "leftLegX": 0,
+                            "leftLegZ": 0
+                        }
+                    },
+                    "Step6": {
+                        "0": {
+                            "bodyRotate": 3.1415 * 2,
+                            "bodyHeight": 0,
+                            "rightHandX": 0,
+                            "rightHandZ": 0,
+                            "leftHandX": 0,
+                            "leftHandZ": 0,
+                            "rightLegX": 0,
+                            "rightLegZ": 0,
+                            "leftLegX": 0,
+                            "leftLegZ": 0
+                        }
+                    }
+                },
+                "closed": false,
+                "folders": {}
+            }
+        }
+
+    </script>
+</body>
+</html>
