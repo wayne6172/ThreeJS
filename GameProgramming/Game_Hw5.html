@@ -3,80 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <title>Game Hw5 Demo</title>
+    <style>
+        #title {
+            position: absolute;
+            top: 0px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #ffff00
+        }
+    </style>
 </head>
 <body>
+    <div id="title">Game Homework5 Demo<br/>尚未做出轉彎與爬坡</div>
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/96/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
     <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
     <script src="https://jyunming-chen.github.io/game3js/js/ccdsys.js"></script>
     <script src="https://rawgit.com/mrdoob/three.js/dev/examples/js/Gyroscope.js"></script>
     <script>
-        var camera, scene, renderer, controls, stats, clock, ccdSys, gyro;
-        var target, omega = Math.asin(20 / 95) * 4, speed = 80;
+        var camera, scene, renderer, controls, stats, clock, ccdSys, gyro, t = 0.0;
+        var L2 = 50, L1 = 45, Ls = 40, Fc = 10, Hr = 6, Hh = 91, Ts = 1, Vf = Ls / Ts;
         var body;
 
         class Lag{
-            constructor(k,start){
+            constructor(k,isRight){
                 this.theta1 = Math.PI / 2 * 3;
                 this.theta2 = 0.1;
+                this.targetX = isRight ? 0 : Ls;
+                this.targetY = 0;
+                this.targetZ = isRight ? 10 : -10;
 
-                if(start)
-                    this.theta = 0;
-                else
-                    this.theta = -Math.asin(40 / 95);
-
-                this.omega = Math.asin(40 / 95) * 4;
-                this.start = start;
-
-                if(start)
-                    this.wait = 0.5;
-                else
-                    this.wait = 0.25;
 
                 this.upperLag = makeLeg(45);
                 this.lowerLag = makeLeg(50);
 
-                this.upperLag.add(this.lowerLag,new THREE.AxisHelper(20));
-                this.lowerLag.add(new THREE.AxisHelper(20));
+                this.upperLag.add(this.lowerLag);
 
                 this.lowerLag.position.set(45,0,0);
                 this.upperLag.position.set(0,95,k);
 
                 this.upperLag.rotation.z = this.theta1;
                 this.lowerLag.rotation.z = this.theta2;
-                this.targetX = 0.0;
-
-                if(start)
-                    this.targetY = 95 - Math.sqrt(95 * 95 - 40 * 40);
-                else
-                    this.targetY = 0;
-
-                this.targetZ = k;
 
                 scene.add(this.upperLag);
+
+                this.targetMesh = new THREE.Mesh(new THREE.BoxGeometry(5,5,5),new THREE.MeshBasicMaterial({color: 0xff0000}));
+                scene.add(this.targetMesh);
             }
 
-            update(dt){
-                if(this.start) {
-                    this.theta += this.omega * dt;
-                    this.theta = this.range(this.theta);
-                    this.targetX += speed * 2 * dt;
-                    this.targetY = 95 * Math.cos(this.theta) - Math.sqrt(95 * 95 - 40 * 40);
-                }
-                else {
-                    this.wait -= dt;
-                    if(this.wait < 0){
-                        this.start = true;
-                        this.wait = 0.5;
-                    }
-                }
-
-                //----------------------------------------------------------------------//
-
+            update(){
                 var thetas = [this.theta1,this.theta2];
                 this.target = new THREE.Vector3(this.targetX,this.targetY,this.targetZ).sub(this.upperLag.position);
-
+                this.targetMesh.position.set(this.targetX,this.targetY,this.targetZ);
+				
                 ccdSys.solve(this.target,thetas);
 
                 this.theta1 = thetas[0]; this.theta2 = thetas[1];
@@ -84,47 +65,60 @@
                 this.upperLag.rotation.z = this.theta1;
                 this.lowerLag.rotation.z = this.theta2;
             }
-
-            range(theta){
-                if(Math.asin(40 / 95) < theta){
-                    this.start = false;
-                    return -Math.asin(40 / 95);
-                }
-                else return theta;
-            }
         }
 
         class Body{
             constructor(){
                 this.rightLag = new Lag(10,true);
                 this.leftLag = new Lag(-10,false);
-                this.body = new THREE.Mesh(new THREE.BoxGeometry(10,30,10),new THREE.MeshNormalMaterial());
-                this.body.position.set(0,95,0);
 
-                scene.add(this.body);
-                this.theta = 0.0;
+                this.light = new THREE.DirectionalLight(0xffffff);
+                this.light.castShadow = true;
+                this.light.position.set(150,150,150);
+                this.light.shadow.camera.left = -200;
+                this.light.shadow.camera.right = 200;
+                this.light.shadow.camera.top = -200;
+                this.light.shadow.camera.bottom = 200;
+                this.light.shadow.camera.near = 1;
+                this.light.shadow.camera.far = 800;
+                this.light.shadow.bias = -0.01;
+                this.light.shadow.mapSize.width = this.light.shadow.mapSize.height = 2048;
+
+                this.body = new THREE.Mesh(new THREE.BoxGeometry(10,30,10),new THREE.MeshPhongMaterial({color: 0xffcbb3}));
+                this.body.position.set(0,95,0);
+                this.body.castShadow = true;
+                this.body.receiveShadow = true;
+                this.body.add(this.light);
+                this.light.target = this.body;
+
+                scene.add(this.body/*,new THREE.CameraHelper(this.light.shadow.camera)*/);
             }
 
             update(dt){
-                this.theta += omega * dt;
+                let n = Math.floor(t / Ts);
+                let tt = t % Ts;
 
-                this.body.position.y = 95 * Math.cos(this.theta);
-                this.body.position.x += speed * dt;
+                if(n % 2 === 1){
+                    this.leftLag.targetX += 2 * Vf * dt;
+                    this.leftLag.targetY = Fc / 2 - Fc / 2 * Math.cos(2 * Math.PI * tt / Ts);
+                }
+                else {
+                    this.rightLag.targetX += 2 * Vf * dt;
+                    this.rightLag.targetY = Fc / 2 - Fc / 2 * Math.cos(2 * Math.PI * tt / Ts);
+                }
 
-                this.theta = this.range(this.theta);
+                this.body.position.y = Hh - Hr / 2 * Math.cos(2 * Math.PI * t / Ts);
+                this.body.position.x = Ls / 2 + Ls * t / Ts;
+
                 this.rightLag.upperLag.position.y = this.body.position.y;
                 this.rightLag.upperLag.position.x = this.body.position.x;
-                this.rightLag.update(dt);
+                this.rightLag.update();
 
                 this.leftLag.upperLag.position.y = this.body.position.y;
                 this.leftLag.upperLag.position.x = this.body.position.x;
-                this.leftLag.update(dt);
+                this.leftLag.update();
             }
 
-            range(theta) {
-                if(Math.asin(20 / 95) < theta)return -Math.asin(20 / 95);
-                else return theta;
-            }
         }
 
         init();
@@ -150,9 +144,13 @@
 
         function makeLeg(length) {
             var oneLink = new THREE.Object3D();
-            var mesh = new THREE.Mesh(new THREE.BoxGeometry(length,10,10),new THREE.MeshNormalMaterial());
-            oneLink.add(mesh);
+            var mesh = new THREE.Mesh(new THREE.BoxGeometry(length,10,10),new THREE.MeshPhongMaterial({color: 0xffcbb3}));
+            oneLink.add(mesh, /*new THREE.AxisHelper(20)*/);
             mesh.position.set(length / 2,0,0);
+
+            mesh.receiveShadow = true;
+            mesh.castShadow = true;
+
             return oneLink;
         }
 
@@ -169,8 +167,10 @@
             renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setClearColor(0x888888);
-            document.body.appendChild(renderer.domElement);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFShadowMap;
 
+            document.body.appendChild(renderer.domElement);
 
             camera = new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,1,5000);
             gyro = new THREE.Gyroscope();
@@ -187,6 +187,11 @@
             ccdSys.setCCDAxis(new THREE.Vector3(0,0,1),0);
             ccdSys.setCCDAxis(new THREE.Vector3(0,0,1),1,-Math.PI,0);
 
+            let plane = new THREE.Mesh(new THREE.PlaneGeometry(10000,10000),new THREE.MeshPhongMaterial());
+            plane.rotation.x = -Math.PI / 2;
+            plane.receiveShadow = true;
+            scene.add(plane);
+
             body = new Body();
             body.body.add(gyro);
         }
@@ -194,7 +199,8 @@
         function animate() {
             stats.update();
 
-            let dt = clock.getDelta();
+            let dt = clock.getDelta()
+            t += dt;
             body.update(dt);
 
             render();
