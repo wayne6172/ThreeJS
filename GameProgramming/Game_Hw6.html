@@ -14,7 +14,7 @@
          }
         #grade {
             position: absolute;
-            top: 30px;
+            top: 40px;
             width: 100%;
             padding: 10px;
             text-align: center;
@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-<div id="title">Game Homework6 Demo</div>
+<div id="title">Game Homework6 Demo<br/>WASD移動 space跳躍</div>
 <div id="grade">您獲得的寶箱有： 0 個</div>
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
@@ -249,7 +249,7 @@
             //---------------------------light----------------------------------
 
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
-            camera.position.set(200,300,200);
+            camera.position.set(-200,100,-200);
             scene.add(camera);
 
             //---------------------------light----------------------------------
