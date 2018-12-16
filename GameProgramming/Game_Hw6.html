@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Hw6 Demo</title>
+    <style>
+        #title {
+             position: absolute;
+             top: 0px;
+             width: 100%;
+             padding: 10px;
+             text-align: center;
+             color: #000000
+         }
+        #grade {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            color: #000000
+        }
+    </style>
+</head>
+<body>
+<div id="title">Game Homework6 Demo</div>
+<div id="grade">您獲得的寶箱有： 0 個</div>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/94/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
+    <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/MTLLoader.js"></script>
+    <script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/OBJLoader.js"></script>
+    <script src="../js/Gyroscope.js"></script>
+    <script src="../js/MD2CharacterComplex.js"></script>
+    <script src="../js/MorphBlendMesh.js"></script>
+    <script src="../js/MD2Loader.js"></script>
+    <script>
+        var camera, scene, renderer, cameraControl, stats, clock, people, keyboard = new KeyboardState(), coins = [];
+        var grade = 0;
+
+        class MD2Wrapper{
+            constructor (config, controls, pos, scale = 1) {
+
+                this.md2 = new THREE.MD2CharacterComplex();
+                this.md2.scale = scale;
+                this.md2.controls = controls;
+
+                this.md2.onLoadComplete = function () {
+                    // here: 'this' is md2
+
+                    // cast and receive shadows
+                    this.enableShadows( true );
+
+                    this.setWeapon( 0 );
+                    this.setSkin( 0 );
+
+                    //this.root.position.copy (pos);
+                    this.root.position.x = pos.x;
+                    this.root.position.z = pos.z;
+
+                    // y is automatically set, accoording to scale ...
+                    console.log ('y is ' + this.root.position.y);
+                    scene.add( this.root );
+                    people.defaultY = this.root.position.y;
+
+                };
+                this.md2.loadParts( config );
+
+            }
+        }
+
+        class People{
+            constructor(pos){
+                let config = {
+                    baseUrl: "../MD2model/",
+                    body: "enemy.md2",
+                    skins: ["enemy.png"],
+                    weapons: [],
+                    animations: {
+                        move: "run",
+                        idle: "stand",
+                        attack: "attack",
+                        jump: "jump",
+                        crouchIdle: "crstnd",
+                        crouchMove: "crwalk",
+                        crouchAttach: "crattk"
+                    },
+
+                    walkSpeed: 150,
+                    crouchSpeed: 75
+                };
+                let control = {
+                    moveForward: false,
+                    moveBackward: false,
+                    moveLeft: false,
+                    moveRight: false
+                };
+                this.wrap = new MD2Wrapper(config,control,pos,1);
+                this.box3 = new THREE.Box3();
+                this.pos = new THREE.Vector3();
+                this.level = 0;
+            }
+            update(){
+                keyboard.update();
+                let controlsY = this.wrap.md2.controls;
+                let dt = clock.getDelta();
+                
+                controlsY.moveForward = !!keyboard.pressed("W");
+                controlsY.moveBackward = !!keyboard.pressed("S");
+                controlsY.moveLeft = !!keyboard.pressed("A");
+                controlsY.moveRight = !!keyboard.pressed("D");
+                controlsY.crouch = !!keyboard.pressed("ctrl");
+
+                this.wrap.md2.update(dt);
+
+                if(keyboard.down("space")){
+                    controlsY.jump = true;
+                    if(this.checkJump()){
+                        this.level++;
+                    }
+                    this.wrap.md2.root.position.y = 15 + this.defaultY;
+                }
+                if(keyboard.up("space")){
+                    controlsY.jump = false;
+                }
+
+                if(this.checkDrop()){
+                    this.level--;
+                }
+
+                this.wrap.md2.root.position.y = this.defaultY + 15 * this.level;
+
+
+                if(this.level !== height(this.wrap.md2.root.position.x,this.wrap.md2.root.position.z)) {
+                    this.wrap.md2.root.position.copy(this.pos);
+                }
+
+                this.box3.setFromObject(this.wrap.md2.root);
+                this.pos.copy(this.wrap.md2.root.position);
+            }
+
+            checkJump(){
+                let y = height(this.wrap.md2.root.position.x,this.wrap.md2.root.position.z,0);
+                return (this.level + 1) === y;
+            }
+            checkDrop(){
+                let y = height(this.wrap.md2.root.position.x,this.wrap.md2.root.position.z,0);
+                return (this.level - 1) === y;
+            }
+        }
+
+        init();
+        animate();
+
+        function unitize(object,targetSize) {
+            var box3 = new THREE.Box3();
+            box3.setFromObject(object);
+            var size = new THREE.Vector3();
+            size.subVectors(box3.max,box3.min);
+            var center = new THREE.Vector3();
+            center.addVectors(box3.max,box3.min).multiplyScalar(0.5);
+
+            console.log('center: ' + center.x + ', ' + center.y + ', ' + center.z);
+            console.log('size: ' + size.x + ', ' + size.y + ', ' + size.z);
+
+            var objSize = Math.max(size.x, size.y, size.z);
+            var scaleSet = targetSize / objSize;
+
+            var theObject = new THREE.Object3D();
+            theObject.add(object);
+            object.scale.set(scaleSet, scaleSet, scaleSet);
+            object.position.set(-center.x * scaleSet, -center.y * scaleSet, -center.z * scaleSet);
+
+            return theObject;
+        }
+
+
+        function readModel(modelName, targetSize = 40){
+            var onProgress = function (xhr) {
+                if(xhr.lengthComputable){
+                    var percentComplete = xhr.loaded / xhr.total * 100;
+                    console.log(Math.round(percentComplete,2) + '% downloaded');
+                }
+            };
+
+            var onError = function (xhr) {};
+
+            var mtlLoader = new THREE.MTLLoader();
+            mtlLoader.crossOrigin = '';
+            mtlLoader.setPath('../model/');
+            mtlLoader.load(modelName + '.mtl',function (materials) {
+
+                materials.preload();
+
+                var objLoader = new THREE.OBJLoader();
+
+                objLoader.setMaterials(materials);
+                objLoader.setPath('../model/');
+                objLoader.load(modelName + '.obj',function (object) {
+                    let theObject = unitize(object,targetSize);
+                    theObject.name = 'OBJ';
+                    theObject.traverse(function (child) {
+                        if(child instanceof THREE.Mesh){
+                            child.receiveShadow = child.castShadow = true;
+                        }
+                    });
+                    coins.push(theObject);
+                    scene.add(theObject);
+                },onProgress,onError);
+            })
+        }
+
+        function height(x,z,del = 0) {
+            if(x >= 150 - del && x <= 350 + del && z >= 150 - del && z <= 350 + del )
+                return 1;
+            if(x >= 150 - del && x <= 350 + del && z >= 350 - del && z <= 550 + del )
+                return 2;
+
+            return 0;
+        }
+
+        function init() {
+
+            clock = new THREE.Clock();
+            
+            //---------------------------renderer----------------------------------
+
+            renderer = new THREE.WebGLRenderer({antialias: true});       // 開啟抗鋸齒
+            document.body.appendChild(renderer.domElement);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            //---------------------------stats----------------------------------
+
+            stats = new Stats();
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.top = '0px';
+            stats.domElement.style.zIndex = 100;
+            document.body.appendChild(stats.domElement);
+
+            //---------------------------scene----------------------------------
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            //---------------------------light----------------------------------
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
+            camera.position.set(200,300,200);
+            scene.add(camera);
+
+            //---------------------------light----------------------------------
+
+            scene.add(new THREE.AmbientLight(0x222222));
+
+            light = new THREE.DirectionalLight(0xffffff);
+            light.position.set(200,300,200);
+
+            light.castShadow = true;
+            light.shadow.mapSize.width = light.shadow.mapSize.height = 1024;
+            light.shadow.camera.near = 5;
+            light.shadow.camera.far = 1000;
+            light.shadow.camera.left = -350;
+            light.shadow.camera.right = 350;
+            light.shadow.camera.top = 350;
+            light.shadow.camera.bottom = -350;
+            light.shadow.bias = -0.01;
+
+            scene.add(light);
+
+
+            //---------------------------ground----------------------------------
+
+            let plane = new THREE.Mesh(new THREE.PlaneGeometry(5000,5000), new THREE.MeshPhongMaterial({}));
+            plane.rotation.x = -Math.PI / 2;
+            plane.receiveShadow = true;
+            scene.add(plane);
+
+            //---------------------------event----------------------------------
+
+            window.addEventListener( 'resize', onWindowResize, false );
+
+
+            //---------------------------control----------------------------------
+
+            cameraControl = new THREE.OrbitControls(camera, renderer.domElement);
+
+            //---------------------------create people----------------------------------
+
+            people = new People(new THREE.Vector3());
+
+            let gyro = new THREE.Gyroscope();
+            gyro.add(camera,light,light.target);
+            people.wrap.md2.root.add(gyro);
+
+
+            //--------------------------create little Box--------------------------
+            let box;
+            box = createBox();
+            box.position.set(250,7.5,250);
+            scene.add(box);
+            box = createBox();
+            box.position.set(250,22.5,450);
+            scene.add(box);
+
+
+            readModel('coin');
+            readModel('coin');
+        }
+
+        function createBox(){
+            let box = new THREE.Mesh(new THREE.BoxGeometry(200,15,200), new THREE.MeshPhongMaterial({color: 0xff0000}));
+            box.castShadow = box.receiveShadow = true;
+            return box;
+        }
+
+        function checkGet(i) {
+            if(i === 0 && people.pos.x >= 220 && people.pos.x <= 280 && people.pos.z >= 220 && people.pos.z <= 280 && people.level === 1)
+                if(keyboard.down("space"))
+                    return true;
+
+            if(i === 1 && people.pos.x >= 220 && people.pos.x <= 280 && people.pos.z >= 420 && people.pos.z <= 480 && people.level === 2)
+                if(keyboard.down("space"))
+                    return true;
+            return false;
+        }
+
+        function animate() {
+            stats.update();
+            people.update();
+
+            for(let i = 0; i < coins.length; i++){
+                if(coins[i]){
+                    if(i === 0)coins[i].position.set(250,85,250);
+                    else if(i === 1)coins[i].position.set(250,95,450);
+
+                    if(checkGet(i)){
+                        grade++;
+                        scene.remove(coins[i]);
+                        coins[i] = undefined;
+                    }
+                }
+            }
+
+            let gradeD = document.getElementById("grade");
+            gradeD.innerHTML = '您獲得的寶箱有： ' + grade + ' 個';
+
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            renderer.render(scene,camera);
+        }
+
+        function onWindowResize(){
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        }
+
+    </script>
+</body>
+</html>
