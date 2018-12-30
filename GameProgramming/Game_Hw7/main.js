@@ -1,5 +1,8 @@
 /////////////////////////////////////////////////////////
 // global variables
+import {Agent as KillerADO} from "./agent";
+import {Agent as millieyan} from "./agent2";
+
 var camera, renderer;
 var agent;
 var countUp, timer = 0;
@@ -39,7 +42,7 @@ function init() {
   //////////////////////////////////////////////////////////////////////////	
   	let size = 10; // halfsize of agent
 //    agent = new Agent(new THREE.Vector3(-400 + 400 * Math.random(), 0, -400 + 400 * Math.random()), mesh);
-    agent = new Agent(new THREE.Vector3(50,0,-50), size);
+    agent = new KillerADO.Agent(new THREE.Vector3(50,0,-50), size);
 
 }
 
@@ -64,3 +67,4 @@ function render() {
   renderer.render(scene, camera);
 }
 
+export {timer}

@@ -14,17 +14,17 @@
 <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
-
-<script src="./agent.js"></script>
-<script src="./obstacle.js"></script>
-<script src="./target.js"></script>
+<script src="obstacle.js"></script>
+<script src="target.js"></script>
 
 <!-- must be before main.js -->
-<script src="./scene.js"></script>
-<script src="./threemain.js"></script>
+<script src="scene.js"></script>
+<script src="threemain.js"></script>
 
-<script src="./main.js"></script>
+<script src="main.js"></script>
 <script>
+    import {timer} from "./main";
+
     function startTimer(display) {
         var minutes, seconds;
         return setInterval(function () {

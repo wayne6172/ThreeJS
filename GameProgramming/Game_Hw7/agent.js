@@ -107,7 +107,7 @@ class Agent {
     let diff = this.target.pos.clone().sub(this.pos)
     let dst = diff.length();
     if (dst < this.ARRIVAL_R) {
-      this.vel.setLength(dst)
+      this.vel.setLength(Math.max(dst,15));
       const REACH_TARGET = 5;
       if (dst < REACH_TARGET) {// target reached
       	console.log ('target reached');
@@ -155,3 +155,4 @@ class Agent {
   }
 
 }
+export {Agent}
