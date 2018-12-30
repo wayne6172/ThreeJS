@@ -1,9 +1,10 @@
-/////////////////////////////////////////////////////////
-// global variables
+import {sceneFromJSON} from "./scene.js";
+import {Agent as KillerADO} from "./agent.js";
+import {Agent as millieyan} from "./agent2.js";
 
 var camera, renderer;
-var agent;
-var countUp, timer = 0;
+var agent,agent2;
+var countUp;
 
 // program starts here ...
 init();
@@ -40,15 +41,16 @@ function init() {
   //////////////////////////////////////////////////////////////////////////	
   	let size = 10; // halfsize of agent
 //    agent = new Agent(new THREE.Vector3(-400 + 400 * Math.random(), 0, -400 + 400 * Math.random()), mesh);
-    agent = new Agent(new THREE.Vector3(50,0,-50), size);
-
+    agent = new KillerADO(new THREE.Vector3(50,0,-50), size);
+    agent2 = new millieyan(new THREE.Vector3(50,0,-50), size);
 }
 
 
 function animate() {
 
-  agent.update(0.01)
-  
+  agent.update(0.01);
+  agent2.update(0.01);
+
   // check agent crossing obstacles ...
   scene.obstacles.forEach ( function (obs) { obs.checkCollision (agent)} );
 
@@ -56,8 +58,11 @@ function animate() {
   	requestAnimationFrame(animate);
   else {
       alert('game over');
-      clearInterval(countUp);
   }
+
+  let display = document.querySelector("#score");
+  display.textContent = agent.name + ' : ' + agent.score + ' VS ' + agent2.name + ' : ' + agent2.score;
+
   render();
 }
 
