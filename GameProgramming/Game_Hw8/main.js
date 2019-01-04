@@ -1,6 +1,7 @@
 import {sceneFromJSON} from "./scene.js";
 import {Agent as KillerADO} from "./agent.js";
 import {Agent as thespecialisme} from "./agent2.js";
+import {scene, initThree} from "./threemain.js";
 
 var camera, renderer;
 var agent,agent2;

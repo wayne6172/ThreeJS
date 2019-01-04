@@ -1,3 +1,4 @@
+import {scene,postMessage} from "./threemain.js";
 
 class Obstacle {
 	constructor (center,size) {

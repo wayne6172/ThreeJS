@@ -1,3 +1,5 @@
+import {scene,postMessage} from "./threemain.js";
+
 class Target {
 	constructor (id, pos) {
 		this.id = id;
