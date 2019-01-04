@@ -1,10 +1,9 @@
 import {sceneFromJSON} from "./scene.js";
 import {Agent as KillerADO} from "./agent.js";
-import {Agent as millieyan} from "./agent2.js";
+import {Agent as thespecialisme} from "./agent2.js";
 
 var camera, renderer;
 var agent,agent2;
-var countUp;
 
 // program starts here ...
 init();
@@ -41,8 +40,29 @@ function init() {
   //////////////////////////////////////////////////////////////////////////	
   	let size = 10; // halfsize of agent
 //    agent = new Agent(new THREE.Vector3(-400 + 400 * Math.random(), 0, -400 + 400 * Math.random()), mesh);
-    agent = new KillerADO(new THREE.Vector3(50,0,-50), size);
-    agent2 = new millieyan(new THREE.Vector3(50,0,-50), size);
+    agent = new KillerADO(randomStart(), size);
+    agent2 = new thespecialisme(randomStart(), size);
+
+    agent.setEnemy(agent2);
+    agent2.setEnemy(agent);
+}
+
+function randomStart() {
+    var pos = new THREE.Vector3();
+    var done = false;
+
+    do{
+        pos.x = -400 + Math.random() * 800; pos.y = 0;
+        pos.z = -400 + Math.random() * 800;
+        for(var i = 0; i < scene.obstacles.length; i++){
+            if(scene.obstacles[i].center.distanceTo(pos) < scene.obstacles[i].size)
+                break;
+        }
+
+        if(i === scene.obstacles.length)
+            done = true;
+    }while(!done);
+    return pos;
 }
 
 
@@ -61,7 +81,7 @@ function animate() {
   }
 
   let display = document.querySelector("#score");
-  display.textContent = agent.name + ' : ' + agent.score + ' VS ' + agent2.name + ' : ' + agent2.score;
+  display.textContent = `${agent.name} : ${agent.score} VS ${agent2.name} : ${agent2.score}`;
 
   render();
 }
