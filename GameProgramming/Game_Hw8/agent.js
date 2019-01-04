@@ -1,3 +1,5 @@
+import {scene} from "./threemain.js"
+
 function agentMesh (size, colorName='red') {
 	// mesh facing +x
 	let geometry = new THREE.Geometry();
