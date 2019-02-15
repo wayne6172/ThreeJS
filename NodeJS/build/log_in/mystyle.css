@@ -1,0 +1,12 @@
+form *{
+    margin-bottom: 15px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+button, input[type="submit"]{
+    text-align: center;
+    margin-left: 30%;
+    margin-right: 30%;
+    width: 40%;
+}

@@ -1,0 +1,17 @@
+iframe {
+    border: none;
+    bottom: 0;
+    height: 100%;
+}
+
+#threeJS {
+    position: absolute;
+    width: 80%;
+    left: 0;
+}
+
+#chat {
+    position: absolute;
+    width: 20%;
+    right: 0;
+}

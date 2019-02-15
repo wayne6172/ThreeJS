@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log in</title>
+    <link rel="stylesheet" type="text/css" href="mystyle.css">
+</head>
+<body>
+    <form>
+        請輸入你的帳號：<input id="account" autocomplete="off" required/><br>
+
+        請輸入你的密碼：<input type="password" id="password" autocomplete="off" required/><br>
+
+        <input type="submit" value="登入">
+    </form>
+    <button onclick="changeWebToSignUp()">註冊</button>
+
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+        $(() => {
+            var socket = parent.socket;
+            $('form').submit(() => {
+                socket.emit('log_in',{account: $('#account').val(), password: $('#password').val()});
+            });
+            socket.on('log_in_fail',() => {
+                alert('登入失敗，請重新登入');
+                location.reload();
+            });
+        });
+
+        function changeWebToSignUp() {
+            document.location.href = "../sign_up/sign_up.html";
+        }
+    </script>
+</body>
+</html>

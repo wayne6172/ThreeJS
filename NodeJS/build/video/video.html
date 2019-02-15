@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>video</title>
+    <style>
+        body{
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            border: none 0;
+        }
+        video{
+            width: 100%;
+        }
+        div {
+            background: aqua;
+            text-align: center;
+            padding: 5px;
+            font: 17px Helvetica;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div>遊戲介紹</div>
+    <video id="video" controls>
+        <source src="video.mp4" type="video/mp4">
+    </video>
+    <script>
+        var vid = document.getElementById('video');
+        vid.loop = true;
+    </script>
+</body>
+</html>

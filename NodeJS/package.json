@@ -6,21 +6,31 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --progress --mode=production",
-    "watch": "webpack --progress --watch"
+    "watch": "webpack --progress --mode=production --watch"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.16.4",
     "jquery": "^3.3.1",
+    "json-stringify-safe": "^5.0.1",
+    "keycode": "^2.2.0",
+    "mysql": "^2.16.0",
+    "npm": "^6.6.0",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0",
     "stats-js": "^1.0.0",
     "three": "^0.100.0",
-    "three-orbitcontrols": "^2.99.1"
+    "three-orbitcontrols": "^2.99.1",
+    "three-text2d": "^0.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
     "@babel/preset-env": "^7.2.3",
+    "autodll-webpack-plugin": "^0.4.2",
     "babel-loader": "^8.0.5",
-    "webpack": "^4.28.4",
+    "webpack": "^4.29.0",
     "webpack-cli": "^3.2.1"
   }
 }
