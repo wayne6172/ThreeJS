@@ -78,7 +78,7 @@ var threeJSConfig = Object.assign({},config,{
         new AutoDllPlugin({
             filename: '[name].dll.js',
             entry: {
-                vendor: ['three','three-orbitcontrols','three-text2d']
+                vendor: ['three','three-orbitcontrols','three-text2d','three-gltf-loader']
             }
         })
     ],
