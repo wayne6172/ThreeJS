@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Module Build Program</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            overflow: hidden;
+            margin: 0;
+        }
+        #threeJS{
+            float: left;
+            width: 80vw;
+            height: 100vh;
+        }
+        #effect{
+            float: right;
+            height: 100vh;
+            width: 20vw;
+        }
+    </style>
+</head>
+<body>
+    <div id="threeJS"></div>
+    <div id="effect">
+        <button id="Create">新增</button>
+        <button id="Delete">刪除</button>
+        <div>
+            <table>
+                <tr>
+                    <td>position:</td>
+                </tr>
+                <tr>
+                    <td>
+                        X: 
+                    </td>
+                    <td>
+                        <input id="posX" type="text" size="10"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Y: 
+                    </td>
+                    <td>
+                        <input id="posY" type="text" size="10"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Z: 
+                    </td>
+                    <td>
+                        <input id="posZ" type="text" size="10"/>
+                    </td>
+                </tr>
+                <tr>
+                        <td>rotation:</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            X: 
+                        </td>
+                        <td>
+                            <input id="rotX" type="text" size="10"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Y: 
+                        </td>
+                        <td>
+                            <input id="rotY" type="text" size="10"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Z: 
+                        </td>
+                        <td>
+                            <input id="rotZ" type="text" size="10"/>
+                        </td>
+                    </tr>
+            </table>
+        </div>
+    </div>
+    <script src="../build/ModuleBuild/vendor.dll.js"></script>
+    <script src="../build/ModuleBuild/main.bundle.js"></script>
+</body>
+</html>

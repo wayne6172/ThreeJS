@@ -1,0 +1,32 @@
+body{
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#introdution{
+    margin-top: 66.7vh;
+    margin-left: 66.7vw;
+    width: 33.2vw;
+    height: 33.2vh;
+
+    position: absolute;
+    text-align: center;
+    background-color: white;
+}
+
+#Camera1Control{
+    width: 10vw;
+    height: 10vh;
+    position: absolute;
+    margin-left: 16.3vw;
+}
+
+#info {
+    position: absolute;
+    top: 2%;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    color: #ffff00
+  }

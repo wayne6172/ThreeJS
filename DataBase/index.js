@@ -11,11 +11,38 @@ var SQLconnection = mysql.createConnection({
 });
 
 
-app.get('/',(req,res) => {
-    SQLconnection.query('SELECT * from test;',(error,results,field) => {
-        console.log(results);
-        res.send(results);
+app
+.get('/inputGrade',(req,res) => {
+    var account = req.query.account;
+    var className = req.query.className;
+    var grade = req.query.grade;
+    
+    SQLconnection.query(`INSERT INTO \`grade\` (\`account\`, \`grade\`, \`id\`, \`classs\`) VALUES ('${account}', '${grade}', NULL, '${className}');`,(error,results,field) => {
+		if(error) throw error;
+        res.send('成功輸入');
     });
+})
+.get('/queryStudent',(req,res) => {
+    var account = req.query.account;
+
+    SQLconnection.query(`SELECT * FROM grade WHERE account = '${account}';`,(error,results,field) => {
+        if(error)throw error;
+
+        if(results.length == 0){
+            res.send('查無此學生成績');
+        }
+        else {
+            var sum = 0, total = 0;
+            results.forEach(element => {
+                sum += element.grade;
+                total++;
+            });
+            res.send('此學生目前成績平均為' + (sum / total));
+        }
+    });
+})
+.get('/',(req,res) => {
+	res.sendFile(__dirname + '/index.html');
 });
 
 SQLconnection.connect((err) => {
@@ -24,7 +51,6 @@ SQLconnection.connect((err) => {
    }
    else console.log('mysql success connection');
 });
-
 
 
 http.listen(port,() => {

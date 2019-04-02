@@ -1,0 +1,51 @@
+*{
+    padding: 0;
+    margin: 0;
+	overflow: hidden;
+}
+
+.christmasTree{
+    /*background: red;*/
+    position: absolute;
+    top:0;
+    left:30vw;
+}
+
+#gift{
+    position: absolute;
+    top: 82vh;
+    left: 55vw;
+    height: 20vh;
+    z-index: -1;
+}
+
+#gift1{
+    position: absolute;
+    top: 82vh;
+    left: 35vw;
+    height: 20vh;
+    z-index: -1;
+}
+
+#power{
+    position: absolute;
+    left: 47vw;
+    z-index: 1;
+}
+
+.santa{
+    position: absolute;
+    left: 0vw;
+    top: 70vh;
+}
+
+.santaImg{
+    z-index: 1;
+    height: 30vh;
+}
+
+.tree{
+    height: 100vh;
+    width: 40vw;
+    z-index:-1;
+}
