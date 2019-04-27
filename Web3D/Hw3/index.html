@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Hw3 Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+</head>
+<body>
+    <header>
+        <h3>The Art of ADO Paint</h3>
+        <p>主要畫面的Render有開啟shadowMap，但右邊5個畫面沒有，若全開啟很容易造成GPU100%(FPS 20)</p>
+        <hr>
+    </header>
+    <div id="mainScreen">
+    </div>
+    <div id="secondScreen1">
+        畫面1
+    </div>
+    <div id="secondScreen2">
+        畫面2
+    </div>
+    <div id="secondScreen3">
+        畫面3
+    </div>
+    <div id="secondScreen4">
+        畫面4
+    </div>
+    <div id="secondScreen5">
+
+    </div>
+    <div id="controlScreen5">
+        <button id="frontCamera">上一個</button>
+        <span id="textCamera">畫面1</span>
+        <button id="nextCamera">下一個</button>
+    </div>
+    <footer id="introduction">
+        
+    </footer>
+    <div id="graph">
+        <img src="Material/123.png">
+    </div>
+
+    <!--<div id="introdution">HelloHelloHelloHelloHelloHello</div>-->
+    <!--<div id="Camera1Control">
+        <button onclick="">放大</button>
+        <button onclick="changeSurveillance(1,'up');">向上</button>
+        <button onclick="">縮小</button><br>
+        <button onclick="changeSurveillance(1,'left');">向左</button>
+        <button onclick="changeSurveillance(1,'down');">向下</button>
+        <button onclick="changeSurveillance(1,'right');">向右</button>
+    </div> -->
+    <script src="../build/hw3/vendor.dll.js"></script>
+    <script src="../build/hw3/main.bundle.js"></script>
+</body>
+</html>

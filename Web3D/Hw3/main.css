@@ -1,0 +1,96 @@
+body{
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#mainScreen {
+    left: 2.5vw;
+    top: 20vh;
+    position: absolute;
+    width: 60vw;
+    text-align: center;
+    color: #ffff00
+}
+
+#secondScreen1,#secondScreen2,#secondScreen3,#secondScreen4{
+    text-align: center;
+}
+
+#secondScreen1{
+    position: absolute;
+    left: 65vw;
+    top: 60vh;
+    width: 120px;
+    height: 120px;
+}
+
+#secondScreen2{
+    position: absolute;
+    left: 75vw;
+    top: 60vh;
+    width: 120px;
+    height: 120px;
+}
+
+#secondScreen3{
+    position: absolute;
+    left: 65vw;
+    top: 40vh;
+    width: 120px;
+    height: 120px;
+}
+
+#secondScreen4{
+    position: absolute;
+    left: 75vw;
+    top: 40vh;
+    width: 120px;
+    height: 120px;
+}
+
+#secondScreen5{
+    position: absolute;
+    left: 85vw;
+    top: 40vh;
+    width: 200px;
+    height: 200px;
+    border: 3px solid red;
+}
+
+#controlScreen5{
+    position: absolute;
+    left: 85vw;
+    top: 72.5vh;
+    width: 200px;
+    text-align: center;
+}
+
+header{
+    position: absolute;
+    text-align: center;
+    width: 100vw;
+    height: 15vh;
+}
+
+footer{
+    position: absolute;
+    text-align: center;
+    width: 100vw;
+    top: 82vh;
+    height: 17vh;
+    font-size: 25px;
+}
+
+#graph{
+    position: absolute;
+    width: 32vw;
+    height: 24vh;
+    top: 15vh;
+    left: 65vw;
+    text-align: center;
+}
+
+#graph img{
+    max-height: 100%;
+}

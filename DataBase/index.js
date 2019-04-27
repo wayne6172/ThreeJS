@@ -7,25 +7,27 @@ var SQLconnection = mysql.createConnection({
    host: 'localhost',
    user: 'root',
    password: 'wayne50114',
-   database: 'test'
+   database: 'test',
 });
 
 
-app
-.get('/inputGrade',(req,res) => {
+app.get('/inputGrade',(req,res) => {
     var account = req.query.account;
     var className = req.query.className;
     var grade = req.query.grade;
     
-    SQLconnection.query(`INSERT INTO \`grade\` (\`account\`, \`grade\`, \`id\`, \`classs\`) VALUES ('${account}', '${grade}', NULL, '${className}');`,(error,results,field) => {
+    SQLconnection.query(`INSERT INTO \`grade\` (\`account\`, \`grade\`, \`id\`, \`classs\`)`
+           + ` VALUES ('${account}', '${grade}', NULL, '${className}');`,(error,results,field) => {
 		if(error) throw error;
         res.send('成功輸入');
     });
-})
-.get('/queryStudent',(req,res) => {
+});
+
+
+app.get('/queryStudent',(req,res) => {
     var account = req.query.account;
 
-    SQLconnection.query(`SELECT * FROM grade WHERE account = '${account}';`,(error,results,field) => {
+    SQLconnection.query(`SELECT * FROM grade WHERE account = '${account}';`,(error,results,field)=>{
         if(error)throw error;
 
         if(results.length == 0){
@@ -41,7 +43,8 @@ app
         }
     });
 })
-.get('/',(req,res) => {
+
+app.get('/',(req,res) => {
 	res.sendFile(__dirname + '/index.html');
 });
 

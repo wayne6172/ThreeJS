@@ -46,6 +46,47 @@ var hw2Config = Object.assign({},config,{
     devtool: 'source-map'
 })
 
+var hw3Config = Object.assign({},config,{
+    name: "main",
+    entry: "./Hw3/main.js",
+    output: {
+        path: path.resolve(__dirname,'build/hw3'),
+        filename: "main.bundle.js"
+    },
+    node: {
+        fs: 'empty',
+        net: 'empty',
+        tls: 'empty'
+    },
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['@babel/preset-env']
+                    }
+                }
+            }
+        ]
+    },
+    plugins: [
+        new AutoDllPlugin({
+            filename: '[name].dll.js',
+            entry: {
+                vendor: ['three','three-orbitcontrols']
+            }
+        })
+    ],
+
+    stats: {
+        colors: true
+    },
+    devtool: 'source-map'
+})
+
 var ModuleBuildConfig = Object.assign({},config,{
     name: "main",
     entry: "./ModuleBuild/main.js",
@@ -88,5 +129,5 @@ var ModuleBuildConfig = Object.assign({},config,{
 })
 
 module.exports = [
-    hw2Config
+    hw3Config
 ];
