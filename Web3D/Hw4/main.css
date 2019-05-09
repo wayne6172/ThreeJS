@@ -1,0 +1,32 @@
+body{
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+header, #mainScreen, #control{
+    border: 3px solid red;
+}
+
+header{
+    text-align: center;
+    width: 100vw;
+    height: 15vh;
+}
+
+#mainScreen{
+    position: absolute;
+    width: 75vw;
+    height: 85vh;
+    top: 15vh;
+}
+
+#control{
+    position: absolute;
+    width: 25vw;
+    left: 75vw;
+    height: 85vh;
+    top: 15vh;
+    text-align: center;
+    font-size: 30px;
+}

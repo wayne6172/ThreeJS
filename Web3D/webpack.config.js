@@ -5,11 +5,11 @@ var config = {
     module: {}
 };
 
-var hw2Config = Object.assign({},config,{
+var hw4Config = Object.assign({},config,{
     name: "main",
-    entry: "./Hw2/main.js",
+    entry: "./Hw4/main.js",
     output: {
-        path: path.resolve(__dirname,'build/hw2'),
+        path: path.resolve(__dirname,'build/hw4'),
         filename: "main.bundle.js"
     },
     node: {
@@ -46,52 +46,11 @@ var hw2Config = Object.assign({},config,{
     devtool: 'source-map'
 })
 
-var hw3Config = Object.assign({},config,{
-    name: "main",
-    entry: "./Hw3/main.js",
+var hw4Config2 = Object.assign({},config,{
+    name: "second",
+    entry: "./Hw4/main.js",
     output: {
-        path: path.resolve(__dirname,'build/hw3'),
-        filename: "main.bundle.js"
-    },
-    node: {
-        fs: 'empty',
-        net: 'empty',
-        tls: 'empty'
-    },
-    module: {
-        rules: [
-            {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: 'babel-loader',
-                    options: {
-                        presets: ['@babel/preset-env']
-                    }
-                }
-            }
-        ]
-    },
-    plugins: [
-        new AutoDllPlugin({
-            filename: '[name].dll.js',
-            entry: {
-                vendor: ['three','three-orbitcontrols']
-            }
-        })
-    ],
-
-    stats: {
-        colors: true
-    },
-    devtool: 'source-map'
-})
-
-var ModuleBuildConfig = Object.assign({},config,{
-    name: "main",
-    entry: "./ModuleBuild/main.js",
-    output: {
-        path: path.resolve(__dirname,'build/ModuleBuild'),
+        path: path.resolve(__dirname,'Hw4/build/'),
         filename: "main.bundle.js"
     },
     node: {
@@ -129,5 +88,5 @@ var ModuleBuildConfig = Object.assign({},config,{
 })
 
 module.exports = [
-    hw3Config
+    hw4Config,hw4Config2
 ];

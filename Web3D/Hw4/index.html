@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Hw4 Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+</head>
+<body>
+    <header><h2>Homework 4</h2></header>
+    <div id="mainScreen"></div>
+    <div id="control">
+        Radius <input type="range" min="3" max="8" step="1" id='intensity' value="5"><br>
+        Sound<input type="checkbox" id="sound">
+        <div id="res"></div>
+        <button id="tuggle">pause</button>
+    </div>
+    <audio id="collisionsound" style="display:none">
+        <source src="hiccup.mp3" type="audio/mp3">
+    </audio>
+    <script src="build/vendor.dll.js"></script>
+    <script src="build/main.bundle.js"></script>
+</body>
+</html>
