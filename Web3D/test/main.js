@@ -4,9 +4,10 @@ import {scene, initScene} from './initScene.js'
 import {Maze} from './Maze.js'
 
 var camera, renderer, stats, clock, controls, maze;
-var i;
+var i, raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
 window.addEventListener('resize', onWindowResize, false);
 
+document.addEventListener('mousedown',onMouseDown,false);
 
 init();
 animate();
@@ -36,7 +37,11 @@ function init() {
 
     document.body.appendChild(renderer.domElement);
 	
-	maze = new Maze(10,10,50,5,50);
+    maze = new Maze(10,10,50,5,50);
+    
+    maze.wall.forEach(function(e){
+        pickables.push(e);
+    });
 }
 
 function onWindowResize() {
@@ -56,4 +61,23 @@ function animate() {
 
 function render() {
     renderer.render(scene, camera);
+}
+
+function onMouseDown(e){
+    e.preventDefault();
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    var intersects = raycaster.intersectObjects(pickables);
+    if(intersects.length > 0){
+        console.log(intersects[0]);
+        
+        if('mazeData' in intersects[0].object){
+            scene.remove(intersects[0].object);
+            maze.removeWall(intersects[0].object.mazeData);
+        }
+        
+    }
+
 }
