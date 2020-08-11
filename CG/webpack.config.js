@@ -7,9 +7,9 @@ var config = {
 
 var hw1Config = Object.assign({},config,{
     name: "main",
-    entry: "./Hw1/main.js",
+    entry: "./Hw2/main.js",
     output: {
-        path: path.resolve(__dirname,'Hw1/build'),
+        path: path.resolve(__dirname,'Hw2/build'),
         filename: "main.bundle.js"
     },
     node: {

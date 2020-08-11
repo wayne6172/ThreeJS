@@ -5,6 +5,8 @@ import {Maze} from './Maze.js'
 
 var camera, renderer, stats, clock, controls, maze;
 var i, raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2(),pickables = [];
+var x = 0;
+
 window.addEventListener('resize', onWindowResize, false);
 
 document.addEventListener('mousedown',onMouseDown,false);
@@ -36,13 +38,34 @@ function init() {
     //controls = new OrbitControls(camera, renderer.domElement);
 
     document.body.appendChild(renderer.domElement);
-	
+    
+
     maze = new Maze(10,10,50,5,50);
     
     maze.wall.forEach(function(e){
         pickables.push(e);
     });
+
+    console.log(maze.wall.length);
+
+    for(let i = maze.notWall.length - 1; i > 0; i--){
+        let j = Math.floor(Math.random() * (i + 1));
+
+        let tmp = maze.notWall[i];
+        maze.notWall[i] = maze.notWall[j];
+        maze.notWall[j] = tmp;
+        
+    }
+
 }
+
+// 10*10 85 per    wall = 200-10-10 = 180 - 95 = 85; 47.22%
+// 15*15 200 per   wall = 450-15-15 = 420 - 220 = 200; 47.61%
+// 20*20 365 per   wall = 800-20-20 = 760 - 395 = 365; 48.02%
+// 
+
+//
+//
 
 function onWindowResize() {
     var width = window.innerWidth;
@@ -52,8 +75,19 @@ function onWindowResize() {
     renderer.setSize(width, height);
 }
 
+
 function animate() {
     var dt = clock.getDelta();
+
+    x += dt;
+
+
+    if(x >= 0.25 && maze.notWall.length > 0){
+        scene.remove(maze.notWall[0]);
+        maze.notWall.shift();
+        
+        x = 0;
+    }
 
     requestAnimationFrame(animate);
     render();

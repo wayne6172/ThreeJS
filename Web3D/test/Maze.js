@@ -11,13 +11,14 @@ class Maze{
         this.wallHeight = wallHeight;
         this.row = [];
         this.col = [];
+        this.notRow = [];
+        this.notCol = [];
+        this.notWall = [];
+
         this.wall = [];
         this.graph = [];
 
         this.initMaze(m,n,width,thickness,wallHeight);
-
-
-        console.log(this.graph);
     }
 
     initMaze(m,n,width,thickness,wallHeight){
@@ -106,6 +107,52 @@ class Maze{
             this.graph[top].splice(this.graph[top].indexOf(bottom),1);
             this.graph[bottom].splice(this.graph[bottom].indexOf(top),1);
         }
+
+        //console.log(this.wall.length);
+
+
+        for (i = 0; i < this.notCol.length; i++) {
+            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MeshNormalMaterial());
+            wallclone.position.z = (this.notCol[i][1]) * width;
+            wallclone.position.x = this.notCol[i][0] * width + (width / 2);
+            wallclone.position.y = wallHeight / 2;
+            //wallclone.rotation.y = Math.PI/2;
+
+            // update graph
+            let top = (this.notCol[i][1] - 1) * n + this.notCol[i][0];
+            let bottom = this.notCol[i][1] * n + this.notCol[i][0];
+
+            wallclone.mazeData = {
+                isRow: false,
+                frontPoint: top,
+                nextPoint: bottom
+            }
+
+            this.notWall.push(wallclone);
+            scene.add(wallclone);
+        }
+
+
+        for (i = 0; i < this.notRow.length; i++) {
+            let wallclone = new THREE.Mesh(new THREE.BoxGeometry(width, wallHeight, thickness), new THREE.MeshNormalMaterial());
+            wallclone.position.x = (this.notRow[i][1]) * width;
+            wallclone.position.z = this.notRow[i][0] * width + (width / 2);
+            wallclone.position.y = wallHeight / 2;
+            wallclone.rotation.y = Math.PI / 2;
+
+            // update graph
+            let left = (this.notRow[i][1] - 1) + n * this.notRow[i][0];
+            let right = this.notRow[i][1] + n * this.notRow[i][0];
+
+            wallclone.mazeData = {
+                isRow: true,
+                frontPoint: left,
+                nextPoint: right
+            }
+
+            this.notWall.push(wallclone);
+            scene.add(wallclone);
+        }
     }
 
     // use kruskal's algorithm
@@ -148,6 +195,12 @@ class Maze{
                     this.row.push([walls[choose][1],walls[choose][2]]);
                 else
                     this.col.push([walls[choose][1],walls[choose][2]]);
+            }
+            else {
+                if(walls[choose][0] === 0)
+                    this.notRow.push([walls[choose][1],walls[choose][2]]);
+                else
+                    this.notCol.push([walls[choose][1],walls[choose][2]]);
             }
             
             let temp = walls[choose];
